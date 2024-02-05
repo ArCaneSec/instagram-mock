@@ -13,7 +13,7 @@ def _get_story_lifetime():
 
 class StoryViews(m.Model):
     story = m.ForeignKey("Story", on_delete=m.CASCADE)
-    user = m.ForeignKey(u.User, on_delete=m.SET_NULL)
+    user = m.ForeignKey(u.User, on_delete=m.CASCADE)
 
 
 class Story(m.Model):
@@ -26,11 +26,13 @@ class Story(m.Model):
         NORMAL = "NRL", "NORMAL"
         CLOSE_FRIEND = "CLS", "CLOSE_FRIEND"
 
-    user = m.ForeignKey(u.User, on_delete=m.SET_NULL)
-    content_type = m.CharField(choices=ContentType.choices)
+    user = m.ForeignKey(u.User, on_delete=m.CASCADE)
+    content_type = m.CharField(choices=ContentType.choices, max_length=3)
     content = m.TextField()
-    privacy_type = m.CharField(choices=PrivacyType.choices)
+    privacy_type = m.CharField(choices=PrivacyType.choices, max_length=3)
     active_until = m.DateTimeField(default=_get_story_lifetime)
-    views = m.ManyToManyField(u.User, through=StoryViews)
-    tags = m.ManyToManyField(u.User)
-    likes = m.ManyToManyField(u.User)
+    views = m.ManyToManyField(
+        u.User, through=StoryViews, related_name="user_story_views"
+    )
+    tags = m.ManyToManyField(u.User, related_name="user_story_tags")
+    likes = m.ManyToManyField(u.User, related_name="user_story_likes")

@@ -13,11 +13,13 @@ class CommentLikes(m.Model):
 
 
 class Comment(m.Model):
-    user = m.ForeignKey(u.User, on_delete=m.SET_NULL)
-    post = m.ForeignKey(p.Post, on_delete=m.SET_NULL)
+    user = m.ForeignKey(u.User, on_delete=m.CASCADE)
+    post = m.ForeignKey(p.Post, on_delete=m.CASCADE)
     content = m.TextField()
     created_at = m.DateTimeField(auto_now_add=True)
     updated_at = m.DateTimeField(auto_now=True)
     is_active = m.BooleanField(default=True)
-    likes = m.ManyToManyField(u.User, through=CommentLikes)
-    tags = m.ManyToManyField(u.User)
+    likes = m.ManyToManyField(
+        u.User, through=CommentLikes, related_name="user_comment_likes"
+    )
+    tags = m.ManyToManyField(u.User, related_name="user_comment_tags")
