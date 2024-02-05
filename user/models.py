@@ -16,7 +16,9 @@ class BasicUserInfo(m.Model):
     )
     biography = m.TextField(null=True, blank=True)
     email = m.EmailField(null=True, blank=True, unique=True)
-    phone_number = m.CharField(max_length=11, null=True, blank=True, unique=True)
+    phone_number = m.CharField(
+        max_length=11, null=True, blank=True, unique=True
+    )
     is_active = m.BooleanField(default=False)
     is_deleted = m.BooleanField(default=False)
 
@@ -42,8 +44,8 @@ class User(BasicUserInfo):
     )
 
     def __str__(self) -> str:
-        return (
-            "%s %s %s" % super().username,
+        return "%s %s %s" % (
+            super().username,
             super().first_name,
             super().last_name,
         )
