@@ -1,5 +1,5 @@
-from django.contrib.auth.hashers import make_password
 from django.db import models as m
+from rest_framework.response import Response
 
 from . import utils
 
@@ -8,7 +8,7 @@ from . import utils
 
 class BasicUserInfo(m.Model):
     username = m.CharField(max_length=250, unique=True)
-    nickname = m.CharField(max_length=250, blank=True, default=username)
+    nickname = m.CharField(max_length=250, blank=True)
     first_name = m.CharField(max_length=250)
     last_name = m.CharField(max_length=250)
     profile = m.ImageField(
@@ -51,8 +51,21 @@ class User(BasicUserInfo):
         )
 
     def save(self, *args, **kwargs):
-        self.password = make_password(self.password, self.salt)
+        self.password = utils.make_password(self.password, self.salt)
+        if not self.nickname:
+            self.nickname = self.username
+
         super().save(*args, **kwargs)
+
+    @staticmethod
+    def login(username: str, password: str) -> bool:
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return False
+
+        return user.password == utils.make_password(password, user.salt)
+            
 
 
 class Follows(m.Model):

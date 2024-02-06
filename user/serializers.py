@@ -12,6 +12,9 @@ class SignUpRequest(serializers.Serializer):
     )
     firstName = serializers.CharField(max_length=250, source="first_name")
     lastName = serializers.CharField(max_length=250, source="last_name")
+    nickName = serializers.CharField(
+        max_length=250, source="nickname", required=False
+    )
     profile = serializers.ImageField(required=False)
     phoneNumber = serializers.CharField(
         max_length=11, required=False, source="phone_number"
@@ -20,7 +23,7 @@ class SignUpRequest(serializers.Serializer):
     password = serializers.CharField(max_length=250)
 
     def validate_password(self, password: str) -> bool:
-        pattern = r"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z\d]{8,}$"
+        pattern = r"^(?=.*[A-Z])(?=.*[a-z])(?=.s*\d)[A-Za-z\d]{8,}$"
         if not re.match(pattern, password):
             raise serializers.ValidationError("Password is weak.")
 
@@ -30,17 +33,23 @@ class SignUpRequest(serializers.Serializer):
         phone = data.get("phone_number")
 
         if not (email or phone):
-            raise serializers.ValidationError(
-                "'email' or 'phoneNumber' must be provided.", "non_unique"
-            )
+            raise serializers.ValidationError({
+                "error": "'email' or 'phoneNumber' must be provided.",
+                "code": "required",
+            })
 
         if not v.validate_uniqueness(username, email, phone):
-            raise serializers.ValidationError(
-                "'username', 'email' and 'phoneNumber' must be unique",
-                "non_unique",
-            )
+            raise serializers.ValidationError({
+                "error": "'username', 'email' and 'phoneNumber'"
+                " must be unique",
+                "code": "nonUniqueValues",
+            })
 
         return data
 
     def create(self, validated_data):
         return m.User.objects.create(**validated_data)
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=250)
+    password = serializers.CharField(max_length=250)
