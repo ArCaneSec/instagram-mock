@@ -1,5 +1,5 @@
 from django.db import models as m
-from rest_framework.response import Response
+from typing import Optional
 
 from . import utils
 
@@ -58,14 +58,19 @@ class User(BasicUserInfo):
         super().save(*args, **kwargs)
 
     @staticmethod
-    def login(username: str, password: str) -> bool:
+    def login(username: str, password: str) -> Optional["User"]:
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
-            return False
+            return None
 
-        return user.password == utils.make_password(password, user.salt)
-            
+        if user.password == utils.make_password(password, user.salt):
+            return user
+        return None
+    
+    @staticmethod
+    def generate_jwt(user: "User"):
+        ...
 
 
 class Follows(m.Model):

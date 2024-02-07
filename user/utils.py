@@ -1,3 +1,4 @@
+import datetime
 from hashlib import sha256
 from random import randint
 
@@ -8,4 +9,8 @@ def generate_hash() -> str:
 
 
 def make_password(password: str, salt: str):
-    return sha256(password + salt).hexdigest()
+    return sha256(password.encode() + salt.encode()).hexdigest()
+
+
+def generate_expire_date() -> datetime.datetime:
+    return datetime.datetime.now() + datetime.timedelta(days=14)

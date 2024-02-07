@@ -1,11 +1,12 @@
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-import jwt
 
-from . import serializers as s
-from . import utils
+from . import authenticate as auth
 from . import models as m
+from . import serializers as s
+from . import utils as u
+
 # Create your views here.
 
 
@@ -18,7 +19,7 @@ def sign_up(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
     serializer.save()
-    return Response("Done", status.HTTP_201_CREATED)
+    return Response({"message": "Done"}, status.HTTP_201_CREATED)
 
 
 @api_view(["POST"])
@@ -29,9 +30,12 @@ def login(request):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST,
         )
-    if m.User.login(**serializer):
-        res = Response()
-        token = ...
-        res.set_cookie("token", )
-
-
+    if user := auth.login(**serializer.validated_data):
+        res = Response(
+            {"message": "successfully logined."}, status.HTTP_200_OK
+        )
+        token = auth.generate_jwt_token(user, u.generate_expire_date())
+        res.set_cookie(
+            "token", token, httponly=True, samesite="strict", secure=True
+        )
+        return res

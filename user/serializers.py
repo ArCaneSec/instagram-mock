@@ -22,33 +22,50 @@ class SignUpRequest(serializers.Serializer):
     email = serializers.EmailField(required=False)
     password = serializers.CharField(max_length=250)
 
+    def validate_username(self, username):
+        if not v.validate_username:
+            raise serializers.ValidationError({
+                "error": "username is not unique.",
+                "code": "nonUniqueUserName",
+            })
+        return username
+
     def validate_password(self, password: str) -> bool:
-        pattern = r"^(?=.*[A-Z])(?=.*[a-z])(?=.s*\d)[A-Za-z\d]{8,}$"
+        pattern = r"^(?=.*[A-Z])(?=.*[a-z])(?=.s*\d).{8,}$"
         if not re.match(pattern, password):
-            raise serializers.ValidationError("Password is weak.")
+            raise serializers.ValidationError({
+                "error": "Password must contain atleast 8 characters,"
+                " 1 one lowercase and 1 uppercase letter and 1 digit.",
+                "code": "weakPassword",
+            })
+        return password
+
+    def validate_phoneNumber(self, phoneNumber: str):
+        if not phoneNumber.isdigit():
+            raise serializers.ValidationError({
+                "error": "phoneNumber must be digit only.",
+                "code": "nonDigitNumber",
+            })
+        if not v.validate_phone(phoneNumber):
+            raise serializers.ValidationError({
+                "error": "phoneNumber is not unique",
+                "code": "nonUniquePhoneNumber",
+            })
+        return phoneNumber
+
+    def validate_email(self, email):
+        if not v.validate_email(email):
+            raise serializers.ValidationError(
+                {"error": "email is not unique.", "code": "nonUniqueEmail"}
+            )
+        return email
 
     def validate(self, data: dict):
-        email = data.get("email")
-        username = data.get("username")
-        phone = data.get("phone_number")
-
-        if not (email or phone):
-            raise serializers.ValidationError({
-                "error": "'email' or 'phoneNumber' must be provided.",
-                "code": "required",
-            })
-
-        if not v.validate_uniqueness(username, email, phone):
-            raise serializers.ValidationError({
-                "error": "'username', 'email' and 'phoneNumber'"
-                " must be unique",
-                "code": "nonUniqueValues",
-            })
-
         return data
 
     def create(self, validated_data):
         return m.User.objects.create(**validated_data)
+
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=250)
