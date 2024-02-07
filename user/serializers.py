@@ -23,7 +23,7 @@ class SignUpRequest(serializers.Serializer):
     password = serializers.CharField(max_length=250)
 
     def validate_username(self, username):
-        if not v.validate_username:
+        if not v.validate_username(username):
             raise serializers.ValidationError({
                 "error": "username is not unique.",
                 "code": "nonUniqueUserName",
@@ -31,7 +31,7 @@ class SignUpRequest(serializers.Serializer):
         return username
 
     def validate_password(self, password: str) -> bool:
-        pattern = r"^(?=.*[A-Z])(?=.*[a-z])(?=.s*\d).{8,}$"
+        pattern = r"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$"
         if not re.match(pattern, password):
             raise serializers.ValidationError({
                 "error": "Password must contain atleast 8 characters,"
