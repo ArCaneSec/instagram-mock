@@ -6,12 +6,29 @@ from . import authenticate as auth
 from . import models as m
 from . import serializers as s
 from . import utils as u
+from .authenticate import authenticate
 
 # Create your views here.
 
 
 @api_view(["POST"])
 def sign_up(request):
+    """
+    User's will create new account from this endpoint.
+
+    Request's body schema:
+        'username' (str)
+        'firstName' (str)
+        'lastName' (str)
+        'nickName' (Optional[str])
+        'profile' (Optional[str])
+        'phoneNumber' (Optional[str])
+        'email' (Optional[str])
+        'password' str
+
+    note that either email or phoneNumber MUST be provided.
+    """
+
     serializer = s.SignUpRequest(data=request.data)
     if not serializer.is_valid():
         return Response(
@@ -24,6 +41,14 @@ def sign_up(request):
 
 @api_view(["POST"])
 def login(request):
+    """
+    Login api.
+
+    Request's body schema:
+        'username' (str)
+        'password' (str)
+    """
+
     serializer = s.LoginSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(
@@ -39,3 +64,21 @@ def login(request):
             "token", token, httponly=True, samesite="strict", secure=True
         )
         return res
+    return Response(
+        {"error": "login failed.", "code": "invalidCredentials"},
+        status.HTTP_404_NOT_FOUND,
+    )
+
+
+@api_view(["GET"])
+@authenticate
+def dashboard(request):
+    """
+    This api will return personnal informations about the
+    request's user.
+
+    User have to authenticate before reaching this endpoint.
+    """
+
+    serializer = s.UserDataSerializer(request.user)
+    return Response(serializer.data, status.HTTP_200_OK)

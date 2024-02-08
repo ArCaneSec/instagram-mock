@@ -70,3 +70,20 @@ class SignUpRequest(serializers.Serializer):
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=250)
     password = serializers.CharField(max_length=250)
+
+
+class UserDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = m.User
+        fields = [
+            "username",
+            "nickname",
+            "first_name",
+            "last_name",
+            "profile",
+            "biography",
+            "email",
+            "phone_number",
+            "total_followers",
+            "total_followings",
+        ]

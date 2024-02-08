@@ -1,5 +1,6 @@
-from django.db import models as m
 from typing import Optional
+
+from django.db import models as m
 
 from . import utils
 
@@ -19,7 +20,7 @@ class BasicUserInfo(m.Model):
     phone_number = m.CharField(
         max_length=11, null=True, blank=True, unique=True
     )
-    is_active = m.BooleanField(default=False)
+    is_active = m.BooleanField(default=True)
     is_deleted = m.BooleanField(default=False)
 
     class Meta:
@@ -43,12 +44,13 @@ class User(BasicUserInfo):
         to="self", symmetrical=False, related_name="followings_hide_story"
     )
 
-    def __str__(self) -> str:
-        return "%s %s %s" % (
-            super().username,
-            super().first_name,
-            super().last_name,
-        )
+    @property
+    def total_followers(self):
+        return self.followers.count()
+
+    @property
+    def total_followings(self):
+        return self.followings.count()
 
     def save(self, *args, **kwargs):
         self.password = utils.make_password(self.password, self.salt)
@@ -67,10 +69,13 @@ class User(BasicUserInfo):
         if user.password == utils.make_password(password, user.salt):
             return user
         return None
-    
-    @staticmethod
-    def generate_jwt(user: "User"):
-        ...
+
+    def __str__(self) -> str:
+        return "%s %s %s" % (
+            super().username,
+            super().first_name,
+            super().last_name,
+        )
 
 
 class Follows(m.Model):
