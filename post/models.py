@@ -23,9 +23,7 @@ class Post(m.Model):
     caption = m.TextField(null=True, blank=True)
     is_active = m.BooleanField(default=True)
     is_deleted = m.BooleanField(default=False)
-    tags = m.ManyToManyField(
-        u.User, related_name="user_tags", blank=True
-    )
+    tags = m.ManyToManyField(u.User, related_name="user_tags", blank=True)
     likes = m.ManyToManyField(
         u.User,
         through=PostLikes,
@@ -34,9 +32,14 @@ class Post(m.Model):
     )
 
     def save(self, *args, **kwargs):
-        ext = kwargs.pop("extension")
-        if ext in ["gif", "jpeg", "jpg"]:
-            self.content_type = self.ContentType.IMAGE
-        elif ext == "mp4":
-            self.content_type = self.ContentType.VIDEO
+        match self.content_type:
+            case "gif" | "jpeg" | "jpg":
+                self.content_type = self.ContentType.IMAGE
+            case "mp4":
+                self.content_type = self.ContentType.VIDEO
+            case "mkv":
+                self.content_type = self.ContentType.REEL
+            case _:
+                raise ValueError("Invalid file extension.")
+
         super().save(*args, **kwargs)
