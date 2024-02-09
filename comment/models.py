@@ -20,6 +20,11 @@ class Comment(m.Model):
     updated_at = m.DateTimeField(auto_now=True)
     is_active = m.BooleanField(default=True)
     likes = m.ManyToManyField(
-        u.User, through=CommentLikes, related_name="user_comment_likes"
+        u.User,
+        through=CommentLikes,
+        related_name="user_comment_likes",
+        blank=True,
     )
-    tags = m.ManyToManyField(u.User, related_name="user_comment_tags")
+    tags = m.ManyToManyField(
+        u.User, related_name="user_comment_tags", blank=True
+    )

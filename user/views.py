@@ -1,6 +1,8 @@
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.http.response import HttpResponseRedirect
+from django.urls import reverse
 
 from . import authenticate as auth
 from . import models as m
@@ -68,6 +70,13 @@ def login(request):
         {"error": "login failed.", "code": "invalidCredentials"},
         status.HTTP_404_NOT_FOUND,
     )
+
+
+@api_view(["GET"])
+def logout(request):
+    res = HttpResponseRedirect(reverse("user:login"))
+    res.delete_cookie("token")
+    return res
 
 
 @api_view(["GET"])

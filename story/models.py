@@ -32,7 +32,11 @@ class Story(m.Model):
     privacy_type = m.CharField(choices=PrivacyType.choices, max_length=3)
     active_until = m.DateTimeField(default=_get_story_lifetime)
     views = m.ManyToManyField(
-        u.User, through=StoryViews, related_name="user_story_views"
+        u.User, through=StoryViews, related_name="user_story_views", blank=True
     )
-    tags = m.ManyToManyField(u.User, related_name="user_story_tags")
-    likes = m.ManyToManyField(u.User, related_name="user_story_likes")
+    tags = m.ManyToManyField(
+        u.User, related_name="user_story_tags", blank=True
+    )
+    likes = m.ManyToManyField(
+        u.User, related_name="user_story_likes", blank=True
+    )

@@ -19,11 +19,24 @@ class Post(m.Model):
 
     user = m.ForeignKey(u.User, on_delete=m.CASCADE)
     content_type = m.CharField(choices=ContentType.choices, max_length=3)
-    content = m.TextField()
+    content = m.FileField(upload_to="static/users/posts/")
     caption = m.TextField(null=True, blank=True)
     is_active = m.BooleanField(default=True)
     is_deleted = m.BooleanField(default=False)
-    tags = m.ManyToManyField(u.User, related_name="user_tags")
-    likes = m.ManyToManyField(
-        u.User, through=PostLikes, related_name="user_likes"
+    tags = m.ManyToManyField(
+        u.User, related_name="user_tags", blank=True
     )
+    likes = m.ManyToManyField(
+        u.User,
+        through=PostLikes,
+        related_name="user_likes",
+        blank=True,
+    )
+
+    def save(self, *args, **kwargs):
+        ext = kwargs.pop("extension")
+        if ext in ["gif", "jpeg", "jpg"]:
+            self.content_type = self.ContentType.IMAGE
+        elif ext == "mp4":
+            self.content_type = self.ContentType.VIDEO
+        super().save(*args, **kwargs)

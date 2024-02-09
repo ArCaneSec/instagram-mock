@@ -36,12 +36,19 @@ class User(BasicUserInfo):
         through="Follows",
         related_name="followings",
         symmetrical=False,
+        blank=True,
     )
     close_friends = m.ManyToManyField(
-        to="self", symmetrical=False, related_name="followings_close_friends"
+        to="self",
+        symmetrical=False,
+        related_name="followings_close_friends",
+        blank=True,
     )
     hide_story = m.ManyToManyField(
-        to="self", symmetrical=False, related_name="followings_hide_story"
+        to="self",
+        symmetrical=False,
+        related_name="followings_hide_story",
+        blank=True,
     )
 
     @property
