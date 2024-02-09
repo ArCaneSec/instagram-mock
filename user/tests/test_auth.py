@@ -32,11 +32,10 @@ class AuthTest(APITestCase):
             "total_followings": 0,
         }
         self.token = generate_jwt_token(user, generate_expire_date())
-        self.cookies = SimpleCookie({"token": self.token})
         self.url = reverse("user:dashboard")
 
     def test_with_valid_token(self):
-        self.client.cookies = self.cookies
+        self.client.cookies = SimpleCookie({"token": self.token})
         res = self.client.get(self.url)
         self.assertEqual(
             res.status_code, 200, "Invalid response code with valid token."

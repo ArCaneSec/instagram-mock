@@ -15,7 +15,7 @@ def upload(request):
     )
     if not serializer.is_valid():
         return Response(
-            {"error": serializer.errors},
+            serializer.errors,
             status.HTTP_400_BAD_REQUEST,
         )
 

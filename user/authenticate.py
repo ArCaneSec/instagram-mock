@@ -21,6 +21,19 @@ class _JWT_CONFIG:
     secret: str = settings.SECRET_KEY
 
 
+def _generate_jwt_for_test_user() -> str:
+    user = m.User.objects.create(
+        username="test",
+        nickname="test",
+        first_name="test",
+        last_name="test",
+        email="test@test.com",
+        phone_number="01234567892",
+        password="123",
+    )
+    return generate_jwt_token(user, utils.generate_expire_date())
+
+
 def login(username: str, password: str) -> Optional[m.User]:
     try:
         user = m.User.objects.get(username=username)

@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from . import models as m
 
-NAME_EXT_PATTERN = r"^.[^.\\/<>%#(){}]{1,50}\.(?<=\.)(\w{3,4}$)"
+NAME_EXT_PATTERN = r"^[^.\\/<>%#(){}]{1,50}\.(?<=\.)(\w{3,4}$)"
 
 
 class CreatePostSerializer(serializers.Serializer):
@@ -18,25 +18,25 @@ class CreatePostSerializer(serializers.Serializer):
         valid_extensions["audio/mp4"] = "mp4"
         valid_extensions["image/gif"] = "gif"
         valid_extensions["image/jpeg"] = "jpeg"
+        valid_extensions["image/jpg"] = "jpg"
         valid_extensions["image/png"] = "png"
         # pattern = r"^.[^.\\/<>%#(){}]{1,20}\.(png|jpeg|gif|png|mp4)?$"
         if not (ct_type := valid_extensions.get(content.content_type)):
             raise serializers.ValidationError({
-                "error": "Invalid file type, suppoerted types are:"
-                " mp4m gif, jpeg, png.",
+                "error": "Invalid file type, supported types are:"
+                " mp4, gif, jpeg, jpg png.",
                 "code": "invalidExtension",
             })
         if self.initial_data["extension"] != ct_type:
             raise serializers.ValidationError({
                 "error": "Name extension and content-type are not consistent.",
-                "code": "invalidExtension",
+                "code": "inconsistentExtension",
             })
-
+        if not 1 < content.size / 1024 < 20000:
+            raise serializers.ValidationError(
+                {"error": "invalid file size.", "code": "invalidSize"}
+            )
         return content
-
-    def validate_content_type(self, data):
-        data = self.initial_data.get("extension")
-        return data
 
     def to_internal_value(self, data):
         try:
@@ -44,9 +44,15 @@ class CreatePostSerializer(serializers.Serializer):
         except AttributeError:
             return super().to_internal_value(data)
 
-        data["extension"] = re.match(NAME_EXT_PATTERN, content_name)[
-            1
-        ]  # matching the second group
+        try:
+            data["extension"] = re.match(NAME_EXT_PATTERN, content_name)[
+                1
+            ]  # matching the second group
+        except TypeError:
+            raise serializers.ValidationError(
+                {"error": "invalid file name.", "code": "invalidName"}
+            )
+        data["content_type"] = data["extension"]
         return super().to_internal_value(data)
 
     def create(self, validated_data):

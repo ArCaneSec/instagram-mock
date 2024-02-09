@@ -33,7 +33,7 @@ class Post(m.Model):
 
     def save(self, *args, **kwargs):
         match self.content_type:
-            case "gif" | "jpeg" | "jpg":
+            case "gif" | "jpeg" | "jpg" | "png":
                 self.content_type = self.ContentType.IMAGE
             case "mp4":
                 self.content_type = self.ContentType.VIDEO
