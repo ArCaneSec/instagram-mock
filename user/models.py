@@ -69,13 +69,25 @@ class User(BasicUserInfo):
     @staticmethod
     def login(username: str, password: str) -> Optional["User"]:
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(username=username, is_active=False)
         except User.DoesNotExist:
             return None
 
         if user.password == utils.make_password(password, user.salt):
             return user
         return None
+
+    @staticmethod
+    def _create_test_user(username: str) -> "User":
+        return User.objects.create(
+            username=username,
+            nickname="%s nickname" % username,
+            first_name="%s first_name" % username,
+            last_name="%s last_name" % username,
+            email="%s@%s.com" % (username, username),
+            phone_number=username if len(username) < 12 else username[0, 12],
+            password=username,
+        )
 
     def __str__(self) -> str:
         return "%s %s %s" % (

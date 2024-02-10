@@ -10,24 +10,16 @@ from ..utils import generate_expire_date
 
 class AuthTest(APITestCase):
     def setUp(self):
-        user = User.objects.create(
-            username="test",
-            nickname="test",
-            first_name="test",
-            last_name="test",
-            email="test@test.com",
-            phone_number="01234567892",
-            password="123",
-        )
+        user = User._create_test_user("test")
         self.data = {
             "username": "test",
-            "nickname": "test",
-            "first_name": "test",
-            "last_name": "test",
+            "nickname": "test nickname",
+            "first_name": "test first_name",
+            "last_name": "test last_name",
             "profile": None,
             "biography": None,
             "email": "test@test.com",
-            "phone_number": "01234567892",
+            "phone_number": "test",
             "total_followers": 0,
             "total_followings": 0,
         }

@@ -5,7 +5,9 @@ from django.urls import reverse
 from rest_framework.test import APITestCase
 
 from post.models import Post
-from user.authenticate import _generate_jwt_for_test_user
+from user.authenticate import generate_jwt_for_test_user
+from user.models import User
+
 
 ENOUGH_DATA = "".join(map(str, range(1, 1025))).encode()
 
@@ -13,7 +15,7 @@ ENOUGH_DATA = "".join(map(str, range(1, 1025))).encode()
 class TestPostUpload(APITestCase):
     def setUp(self):
         self.url = reverse("post:upload")
-        self.token = _generate_jwt_for_test_user()
+        self.token = generate_jwt_for_test_user(User._create_test_user("test"))
         self.client.cookies = SimpleCookie({"token": self.token})
         self.launch = lambda data: (
             self.client.post(
