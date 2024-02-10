@@ -43,3 +43,9 @@ class Post(m.Model):
                 raise ValueError("Invalid file extension.")
 
         super().save(*args, **kwargs)
+
+    @staticmethod
+    def _create_test_post(user: u.User, is_active: bool) -> "Post":
+        return Post.objects.create(
+            user=user, content_type="jpg", content="tt", is_active=is_active
+        )
