@@ -63,7 +63,7 @@ class User(BasicUserInfo):
         self.password = utils.make_password(self.password, self.salt)
         if not self.nickname:
             self.nickname = self.username
-
+        self.username = self.username.lower()
         super().save(*args, **kwargs)
 
     @staticmethod
