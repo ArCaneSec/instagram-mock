@@ -1,9 +1,9 @@
+import jwt
 import datetime
 from dataclasses import dataclass
 from functools import wraps
 from typing import Callable, Optional
 
-import jwt
 from django.conf import settings
 from django.http.response import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
