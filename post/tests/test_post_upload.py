@@ -8,7 +8,6 @@ from post.models import Post
 from user.authenticate import generate_jwt_for_test_user
 from user.models import User
 
-
 ENOUGH_DATA = "".join(map(str, range(1, 1025))).encode()
 
 
@@ -104,3 +103,13 @@ class TestPostUpload(APITestCase):
         self.assertEqual(res.status_code, 400)
         self.assertEqual(res.json()["content"]["code"], "invalidSize")
         self.check_no_post_was_created()
+
+    def test_post_with_tags(self):
+        data = dict(
+            content=SimpleUploadedFile("test.jpg", ENOUGH_DATA, "image/jpg"),
+            tags=["test"],
+        )
+        res = self.launch(data)
+        self.assertEqual(
+            res.status_code, 201, "upload failed with valid data."
+        )

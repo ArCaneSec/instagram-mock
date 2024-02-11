@@ -1,5 +1,3 @@
-from http.cookies import SimpleCookie
-
 from rest_framework.test import APITestCase
 
 from post import core as c
