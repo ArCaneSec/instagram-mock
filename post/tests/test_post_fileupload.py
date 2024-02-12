@@ -17,7 +17,7 @@ class TestPostUpload(APITestCase):
         self.token = generate_jwt_for_test_user(User._create_test_user("test"))
         self.client.cookies = SimpleCookie({"token": self.token})
         self.launch = lambda data: (
-            self.client.post(
+            self.client.put(
                 self.url,
                 data=data,
                 format="multipart",
@@ -33,7 +33,9 @@ class TestPostUpload(APITestCase):
         )
         res = self.launch(data)
         self.assertEqual(
-            res.status_code, 201, "upload failed with valid data."
+            res.status_code,
+            201,
+            f"upload failed with valid data. {res.json()}",
         )
         self.assertEqual(
             bool(Post.objects.last()),

@@ -33,6 +33,16 @@ class PostFile(m.Model):
             post__isnull=True,
         ).count()
 
+    @staticmethod
+    def _create_test_file(user: u.User):
+        with open("C:\Desktop\chilly.gif", "rb") as img:
+
+            return PostFile.objects.create(
+                user=user,
+                content_type=PostFile.ContentType.IMAGE,
+                content=img,
+            ).pk
+
     def save(self, *args, **kwargs):
         match self.content_type:
             case "gif" | "jpeg" | "jpg" | "png":
@@ -67,9 +77,3 @@ class Post(m.Model):
         post = Post.objects.create(user=user, is_active=is_active)
         PostFile.objects.create(content="tt", post=post)
         return post
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        # if self.tags:
-            # self.tags.set([user.pk for user in self.tags])
-

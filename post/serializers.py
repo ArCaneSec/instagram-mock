@@ -64,11 +64,12 @@ class CreatePostSerializer(serializers.Serializer):
     files = serializers.ListField(max_length=10)
 
     def validate_tags(self, tags):
-        if not (
-            users := User.objects.filter(
+        tags = set(tags)
+        users = User.objects.filter(
                 is_active=True, username__in=tags
-            ).distinct()
-        ):
+        ).distinct()
+        usernames = users.values_list("username", flat=True)
+        if tags.difference(usernames):
             raise serializers.ValidationError(
                 {"error": "user not found", "code": "userNotFound"}
             )
@@ -79,18 +80,24 @@ class CreatePostSerializer(serializers.Serializer):
     def validate_files(self, files):
         files = set(files)
         pf = m.PostFile.objects.filter(
-            pk__in=files, user=self.context["request"].user
+            pk__in=files, user=self.context["request"].user, post__isnull=True
         ).distinct()
         pf_id_list = pf.values_list("id", flat=True)
         if files.difference(pf_id_list):
             raise serializers.ValidationError(
-                {"error": "file not found.", "code": "postNotFound"}
+                {"error": "file not found.", "code": "fileNotFound"}
             )
 
         return pf
 
     def create(self, validated_data: dict):
         post_files: QuerySet[m.PostFile] = validated_data.pop("files")
+        try:
+            tags = validated_data.pop("tags")
+        except ValueError:
+            pass
         post = m.Post.objects.create(**validated_data)
+        if tags:
+            post.tags.set([user.pk for user in tags])
         post_files.update(post=post)
         return post
