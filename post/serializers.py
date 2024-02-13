@@ -66,7 +66,7 @@ class CreatePostSerializer(serializers.Serializer):
     def validate_tags(self, tags):
         tags = set(tags)
         users = User.objects.filter(
-                is_active=True, username__in=tags
+            is_active=True, username__in=tags
         ).distinct()
         usernames = users.values_list("username", flat=True)
         if tags.difference(usernames):
@@ -79,9 +79,17 @@ class CreatePostSerializer(serializers.Serializer):
 
     def validate_files(self, files):
         files = set(files)
-        pf = m.PostFile.objects.filter(
-            pk__in=files, user=self.context["request"].user, post__isnull=True
-        ).distinct()
+        try:
+            pf = m.PostFile.objects.filter(
+                pk__in=files,
+                user=self.context["request"].user,
+                post__isnull=True,
+            ).distinct()
+        except ValueError:
+            raise serializers.ValidationError(
+                {"error": "invalid file value.", "code": "invalidFile"}
+            )
+
         pf_id_list = pf.values_list("id", flat=True)
         if files.difference(pf_id_list):
             raise serializers.ValidationError(

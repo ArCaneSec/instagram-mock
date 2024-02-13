@@ -33,14 +33,17 @@ def upload(request):
             )
 
         id = post_file.upload_file()
-        return Response({
-            "message": "file successfully uploaded.",
-            "id": id,
-            "capacity": UPLOAD_CAPACITY,
-            "totalUploads": m.PostFile.specific_date_uploads(
-                request.user, date.today()
-            ),
-        })
+        return Response(
+            {
+                "message": "file successfully uploaded.",
+                "id": id,
+                "capacity": UPLOAD_CAPACITY,
+                "totalUploads": m.PostFile.specific_date_uploads(
+                    request.user, date.today()
+                ),
+            },
+            status.HTTP_201_CREATED,
+        )
 
     serializer = s.CreatePostSerializer(
         data=request.data, context={"request": request}

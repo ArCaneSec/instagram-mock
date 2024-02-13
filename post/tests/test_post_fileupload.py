@@ -4,7 +4,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
-from post.models import Post
+from post.models import PostFile
 from user.authenticate import generate_jwt_for_test_user
 from user.models import User
 
@@ -24,7 +24,7 @@ class TestPostUpload(APITestCase):
             )
         )
         self.check_no_post_was_created = lambda: self.assertEqual(
-            bool(Post.objects.last()), False
+            bool(PostFile.objects.last()), False
         )
 
     def test_regular_upload(self):
@@ -38,9 +38,9 @@ class TestPostUpload(APITestCase):
             f"upload failed with valid data. {res.json()}",
         )
         self.assertEqual(
-            bool(Post.objects.last()),
+            bool(PostFile.objects.last()),
             True,
-            "upload was successfull but data wasn't saved on db.",
+            f"upload was successfull but data wasn't saved on db, {res.json()}",
         )
 
     def test_invalid_name_extension(self):

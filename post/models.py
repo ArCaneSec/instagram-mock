@@ -35,13 +35,11 @@ class PostFile(m.Model):
 
     @staticmethod
     def _create_test_file(user: u.User):
-        with open("C:\Desktop\chilly.gif", "rb") as img:
-
-            return PostFile.objects.create(
-                user=user,
-                content_type=PostFile.ContentType.IMAGE,
-                content=img,
-            ).pk
+        return PostFile.objects.create(
+            user=user,
+            content_type="gif",
+            content="ttt",
+        ).pk
 
     def save(self, *args, **kwargs):
         match self.content_type:
@@ -75,5 +73,7 @@ class Post(m.Model):
     @staticmethod
     def _create_test_post(user: u.User, is_active: bool) -> "Post":
         post = Post.objects.create(user=user, is_active=is_active)
-        PostFile.objects.create(content="tt", post=post)
+        PostFile.objects.create(
+            user=user, content="tt", post=post, content_type="gif"
+        )
         return post
