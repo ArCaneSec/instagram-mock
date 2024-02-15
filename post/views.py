@@ -14,6 +14,17 @@ from . import serializers as s
 @api_view(["POST", "PUT"])
 @authenticate
 def upload(request):
+    """
+    This view is responsible for uploading files related to posts,
+    'PUT' method must be used for uploading,
+
+    Successfully uploaded file will get an associated id that must
+    be used in post creation api.
+
+    Request body schema:
+        'content' (str): file content.
+    """
+
     UPLOAD_CAPACITY = 10
 
     if request.method == "PUT":
@@ -63,6 +74,11 @@ def upload(request):
 @api_view(["PUT", "DELETE"])
 @authenticate
 def like(request, post_id):
+    """
+    Responsible for liking an specific post, as well as removing it.
+    Post id is fetched from path parameters.
+    """
+
     if request.method == "PUT":
         like_post_proccess = core.LikePostCreate(request.user, post_id)
         if not like_post_proccess.is_valid():
