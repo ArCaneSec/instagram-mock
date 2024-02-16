@@ -7,6 +7,7 @@ from user.models import User
 
 from . import models as m
 
+# Pattern for extracting extension from file names.
 NAME_EXT_PATTERN = r"^[^.\\/<>%#(){}]{1,50}\.(?<=\.)(\w{3,4}$)"
 
 
@@ -15,6 +16,11 @@ class UploadPostFileSerializer(serializers.Serializer):
     content_type = serializers.CharField()
 
     def to_internal_value(self, data):
+        """
+        Extracting extention from file name and putting it
+        into 'data' dict.
+        """
+
         try:
             content_name = data.get("content").name
         except AttributeError:
@@ -32,6 +38,13 @@ class UploadPostFileSerializer(serializers.Serializer):
         return super().to_internal_value(data)
 
     def validate_content(self, content):
+        """
+        Validating extension and content size.
+
+        If content type is not valid, or content type does not match
+        with the extension in file name, validation will not pass.
+        """
+
         valid_extensions = {}
         valid_extensions["video/mp4"] = "mp4"
         valid_extensions["image/gif"] = "gif"
@@ -64,6 +77,13 @@ class CreatePostSerializer(serializers.Serializer):
     files = serializers.ListField(max_length=10)
 
     def validate_tags(self, tags):
+        """
+        Validating users that are being tagged in the post.
+
+        If any user within tag is not valid (invalid, inactive, deleted),
+        whole data will be marked as invalid.
+        """
+
         tags = set(tags)
         users = User.objects.filter(
             is_active=True, username__in=tags
@@ -78,6 +98,12 @@ class CreatePostSerializer(serializers.Serializer):
         return tags
 
     def validate_files(self, files):
+        """
+        Validating files ids within the post.
+
+        If any file is invalid, whole data will be marked as invalid.
+        """
+
         files = set(files)
         try:
             pf = m.PostFile.objects.filter(
@@ -100,12 +126,19 @@ class CreatePostSerializer(serializers.Serializer):
 
     def create(self, validated_data: dict):
         post_files: QuerySet[m.PostFile] = validated_data.pop("files")
+
+        # Post can have 0 tags, thats why we are passing.
         try:
             tags = validated_data.pop("tags")
         except ValueError:
             pass
+
         post = m.Post.objects.create(**validated_data)
+
+        # Updating junction table if tags exists.
         if tags:
             post.tags.set([user.pk for user in tags])
+
+        # Changing PostFile's post values from null to 'post' id.
         post_files.update(post=post)
         return post
