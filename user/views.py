@@ -1,11 +1,11 @@
+from django.http.response import HttpResponseRedirect
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from django.http.response import HttpResponseRedirect
-from django.urls import reverse
 
 from . import authenticate as auth
-from . import models as m
+from . import core
 from . import serializers as s
 from . import utils as u
 from .authenticate import authenticate
@@ -91,3 +91,37 @@ def dashboard(request):
 
     serializer = s.UserDataSerializer(request.user)
     return Response(serializer.data, status.HTTP_200_OK)
+
+
+@api_view(["POST", "DELETE"])
+@authenticate
+def follow(request, user_id):
+    if request.method == "POST":
+        validator = core.Follow(user_id, request.user)
+        if not validator.is_valid():
+            return Response(
+                validator._error_message, status.HTTP_400_BAD_REQUEST
+            )
+
+        validator.follow_user()
+        msg = (
+            "successfully followed"
+            if validator._is_user_private
+            else "successfully created follow request."
+        )
+        return Response({"message": msg}, status.HTTP_201_CREATED)
+
+    elif request.method == "DELETE":
+        validator = core.RemoveFollow(user_id, request.user)
+        if not validator.is_valid():
+            return Response(
+                validator._error_message, status.HTTP_400_BAD_REQUEST
+            )
+
+        validator.remove_follow()
+        msg = (
+            "successfully removed follow."
+            if validator._is_user_private
+            else "successfully removed follow request."
+        )
+        return Response({"message": msg}, status.HTTP_200_OK)

@@ -38,6 +38,13 @@ class User(BasicUserInfo):
         symmetrical=False,
         blank=True,
     )
+    follow_requests = m.ManyToManyField(
+        to="self",
+        through="FollowRequest",
+        symmetrical=False,
+        related_name="followings_follow_requests",
+        blank=True,
+    )
     close_friends = m.ManyToManyField(
         to="self",
         symmetrical=False,
@@ -98,10 +105,20 @@ class User(BasicUserInfo):
 
 
 class Follows(m.Model):
-    following = m.ForeignKey(
-        User, on_delete=m.CASCADE, related_name="followed_user"
-    )
     follower = m.ForeignKey(
         User, on_delete=m.CASCADE, related_name="following_user"
     )
+    following = m.ForeignKey(
+        User, on_delete=m.CASCADE, related_name="followed_user"
+    )
     date = m.DateTimeField(auto_now_add=True)
+
+
+class FollowRequest(m.Model):
+    from_user = m.ForeignKey(
+        User, on_delete=m.CASCADE, related_name="pending_follow_requests"
+    )
+    to_user = m.ForeignKey(
+        User, on_delete=m.CASCADE, related_name="incoming_follow_requets"
+    )
+    created_at = m.DateTimeField(auto_now_add=True)
