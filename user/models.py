@@ -33,9 +33,9 @@ class User(BasicUserInfo):
     salt = m.CharField(default=utils.generate_hash, max_length=100)
     followers = m.ManyToManyField(
         to="self",
-        through="Follows",
-        related_name="followings",
+        through="Follow",
         symmetrical=False,
+        related_name="followings",
         blank=True,
     )
     follow_requests = m.ManyToManyField(
@@ -71,6 +71,11 @@ class User(BasicUserInfo):
         if not self.nickname:
             self.nickname = self.username
         self.username = self.username.lower()
+        if not (self.email or self.phone_number):
+            raise ValueError(
+                "You have to provide an email address or phone number "
+                "in order to sign up."
+            )
         super().save(*args, **kwargs)
 
     @staticmethod
@@ -104,21 +109,21 @@ class User(BasicUserInfo):
         )
 
 
-class Follows(m.Model):
-    follower = m.ForeignKey(
-        User, on_delete=m.CASCADE, related_name="following_user"
-    )
+class Follow(m.Model):
     following = m.ForeignKey(
-        User, on_delete=m.CASCADE, related_name="followed_user"
+        User, on_delete=m.CASCADE, related_name="user_followers"
+    )
+    follower = m.ForeignKey(
+        User, on_delete=m.CASCADE, related_name="user_followings"
     )
     date = m.DateTimeField(auto_now_add=True)
 
 
 class FollowRequest(m.Model):
-    from_user = m.ForeignKey(
-        User, on_delete=m.CASCADE, related_name="pending_follow_requests"
-    )
     to_user = m.ForeignKey(
         User, on_delete=m.CASCADE, related_name="incoming_follow_requets"
+    )
+    from_user = m.ForeignKey(
+        User, on_delete=m.CASCADE, related_name="pending_follow_requests"
     )
     created_at = m.DateTimeField(auto_now_add=True)

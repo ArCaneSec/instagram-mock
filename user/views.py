@@ -99,29 +99,25 @@ def follow(request, user_id):
     if request.method == "POST":
         validator = core.Follow(user_id, request.user)
         if not validator.is_valid():
-            return Response(
-                validator._error_message, status.HTTP_400_BAD_REQUEST
-            )
+            return Response(validator.errors, status.HTTP_400_BAD_REQUEST)
 
         validator.follow_user()
         msg = (
-            "successfully followed"
+            "successfully created follow request."
             if validator._is_user_private
-            else "successfully created follow request."
+            else "successfully followed"
         )
         return Response({"message": msg}, status.HTTP_201_CREATED)
 
     elif request.method == "DELETE":
         validator = core.RemoveFollow(user_id, request.user)
         if not validator.is_valid():
-            return Response(
-                validator._error_message, status.HTTP_400_BAD_REQUEST
-            )
+            return Response(validator.errors, status.HTTP_400_BAD_REQUEST)
 
         validator.remove_follow()
         msg = (
-            "successfully removed follow."
+            "successfully removed follow request."
             if validator._is_user_private
-            else "successfully removed follow request."
+            else "successfully removed follow."
         )
         return Response({"message": msg}, status.HTTP_200_OK)

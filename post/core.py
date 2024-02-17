@@ -6,14 +6,8 @@ from typing import Callable
 from rest_framework.serializers import FileField
 
 from user import models as u
-
+from utils.exceptions import JsonSerializableValueError
 from . import models as m
-
-
-class JsonSerializableValueError(Exception):
-    def __init__(self, message: dict):
-        self.message = message
-        super().__init__()
 
 
 @dataclass
