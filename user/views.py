@@ -110,14 +110,14 @@ def follow(request, user_id):
         return Response({"message": msg}, status.HTTP_201_CREATED)
 
     elif request.method == "DELETE":
-        validator = core.RemoveFollow(user_id, request.user)
+        validator = core.UnFollow(user_id, request.user)
         if not validator.is_valid():
             return Response(validator.errors, status.HTTP_400_BAD_REQUEST)
 
-        validator.remove_follow()
+        validator.unfollow_user()
         msg = (
             "successfully removed follow request."
             if validator._is_user_private
-            else "successfully removed follow."
+            else "successfully unfollowed."
         )
         return Response({"message": msg}, status.HTTP_200_OK)

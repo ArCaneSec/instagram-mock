@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Callable
 
-from utils.validators import Validator, validation_required
 from post.core import JsonSerializableValueError
+from utils.validators import Validator, validation_required
 
 from . import models as m
 
@@ -54,29 +54,30 @@ class Follow(Follows):
             raise JsonSerializableValueError(
                 {
                     "error": "user is already being followed",
-                    "code": "duplicatelFollow",
+                    "code": "duplicateFollow",
                 }
             )
 
     @validation_required
     def follow_user(self):
         if self._is_user_private:
-            self._user_obj.follow_requests.add(
-                self.from_user
-            )
+            self._user_obj.follow_requests.add(self.from_user)
             return
 
-        self._user_obj.followers.add(
-            self.from_user
-        )
+        self._user_obj.followers.add(self.from_user)
 
 
-class RemoveFollow(Follows):
+class UnFollow(Follows):
     def is_valid(self) -> bool:
         return super().is_valid([self._check_user_is_already_following])
 
     def _check_user_is_already_following(self):
-        if not self._user_obj.followers.filter(
+        if self._user_obj.followers.filter(
+            pk=self.from_user.pk
+        ).first():
+            return
+
+        if not self._user_obj.follow_requests.filter(
             pk=self.from_user.pk
         ).first():
             raise JsonSerializableValueError(
@@ -87,7 +88,7 @@ class RemoveFollow(Follows):
             )
 
     @validation_required
-    def remove_follow(self):
+    def unfollow_user(self):
         if self._is_user_private:
             self._user_obj.follow_requests.remove(self.from_user)
             return

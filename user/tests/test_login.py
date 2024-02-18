@@ -46,4 +46,12 @@ class Login(APITestCase):
         self.assertEqual(res.json()["code"], "invalidCredentials")
 
     def test_inactive_user(self):
-        raise NotImplementedError()
+        user = m.User._create_test_user("another_test")
+        user.is_active = False
+        user.save()
+        res = self.client.post(
+            self.url,
+            {"username": "another_test", "password": "another_test"},
+            "json",
+        )
+        self.assertEqual(res.status_code, 404, res.json())

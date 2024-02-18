@@ -90,15 +90,16 @@ class User(BasicUserInfo):
         return None
 
     @staticmethod
-    def _create_test_user(username: str) -> "User":
+    def _create_test_user(username: str, is_private: bool = False) -> "User":
         return User.objects.create(
             username=username,
             nickname="%s nickname" % username,
             first_name="%s first_name" % username,
             last_name="%s last_name" % username,
             email="%s@%s.com" % (username, username),
-            phone_number=username if len(username) < 12 else username[0, 12],
+            phone_number=username if len(username) < 12 else username[0:12],
             password=username,
+            is_private=is_private,
         )
 
     def __str__(self) -> str:

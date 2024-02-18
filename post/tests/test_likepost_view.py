@@ -16,7 +16,7 @@ class TestPostLikes(APITestCase):
             {"token": generate_jwt_for_test_user(self.user)}
         )
         self.url = lambda post_id: reverse("post:like", args=[post_id])
-        self.launch = lambda path: self.client.put(path, content_type="json")
+        self.launch = lambda path: self.client.put(path)
 
     def test_regular_like_req(self) -> None:
         path = self.url(self.post.pk)

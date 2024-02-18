@@ -42,32 +42,38 @@ class AuthTest(APITestCase):
         self.assertEqual(res.status_code, 302)
 
     def test_invalid_header(self):
-        cookie = SimpleCookie({
-            "token": "eyJleHAiOjE3MDg2MTc4MzksInVzZXJuYW1lIjoiYXJjYW5lIn0"
-            ".NgdMl11RNSNI6wC3KZU3UKEooWNPUfQKbPZMsdrAmCI"
-        })
+        cookie = SimpleCookie(
+            {
+                "token": "eyJleHAiOjE3MDg2MTc4MzksInVzZXJuYW1lIjoiYXJjYW5lIn0"
+                ".NgdMl11RNSNI6wC3KZU3UKEooWNPUfQKbPZMsdrAmCI"
+            }
+        )
         self.client.cookies = cookie
         res = self.client.get(self.url)
         self.assertEqual(res.status_code, 403)
         self.assertEqual(res.json()["code"], "forbidden")
 
     def test_invalid_payload(self):
-        cookie = SimpleCookie({
-            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
-            "eyJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjoxNzA4NjM1NDA3fQ."
-            "cDAqq85XBdnQd6q44b_pRhqGr5NbPBSOcOT8RdPfjJc"
-        })
+        cookie = SimpleCookie(
+            {
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+                "eyJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjoxNzA4NjM1NDA3fQ."
+                "cDAqq85XBdnQd6q44b_pRhqGr5NbPBSOcOT8RdPfjJc"
+            }
+        )
         self.client.cookies = cookie
         res = self.client.get(self.url)
         self.assertEqual(res.status_code, 403)
         self.assertEqual(res.json()["code"], "forbidden")
 
     def test_expired_token(self):
-        cookie = SimpleCookie({
-            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
-            "eyJ1c2VybmFtZSI6ImFyY2FuZSIsImV4cCI6MTcwNDcyMjM5NX0."
-            "0MyvIYSowt5o_Jw4YNw9P2TaSKgqeq6Fy1GnCh2WZ5U"
-        })
+        cookie = SimpleCookie(
+            {
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+                "eyJ1c2VybmFtZSI6ImFyY2FuZSIsImV4cCI6MTcwNDcyMjM5NX0."
+                "0MyvIYSowt5o_Jw4YNw9P2TaSKgqeq6Fy1GnCh2WZ5U"
+            }
+        )
         self.client.cookies = cookie
         res = self.client.get(self.url)
         self.assertEqual(res.status_code, 302)

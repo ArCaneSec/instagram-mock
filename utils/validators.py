@@ -24,12 +24,13 @@ class Validator(ABC):
 def validation_required(func: Callable):
 
     @wraps(func)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self):
         if not self._validation_passed:
             raise PermissionError(
                 f"Cannot call {func.__name__} before calling is_valid()."
             )
 
-        func(self, *args, **kwargs)
+        func(self)
+        self._validation_passed = False
 
     return wrapper
