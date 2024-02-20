@@ -121,3 +121,9 @@ def follow(request, user_id):
             else "successfully unfollowed."
         )
         return Response({"message": msg}, status.HTTP_200_OK)
+
+
+@api_view(["PATCH"])
+@authenticate
+def edit_profile(request):
+    pass

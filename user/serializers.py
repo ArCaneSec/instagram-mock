@@ -24,33 +24,41 @@ class SignUpRequest(serializers.Serializer):
 
     def validate_username(self, username):
         if not v.validate_username(username):
-            raise serializers.ValidationError({
-                "error": "username is not unique.",
-                "code": "nonUniqueUserName",
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "username is not unique.",
+                    "code": "nonUniqueUserName",
+                }
+            )
         return username
 
     def validate_password(self, password: str) -> bool:
         pattern = r"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$"
         if not re.match(pattern, password):
-            raise serializers.ValidationError({
-                "error": "Password must contain atleast 8 characters,"
-                " 1 one lowercase and 1 uppercase letter and 1 digit.",
-                "code": "weakPassword",
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "Password must contain atleast 8 characters,"
+                    " 1 one lowercase and 1 uppercase letter and 1 digit.",
+                    "code": "weakPassword",
+                }
+            )
         return password
 
     def validate_phoneNumber(self, phoneNumber: str):
         if not phoneNumber.isdigit():
-            raise serializers.ValidationError({
-                "error": "phoneNumber must be digit only.",
-                "code": "nonDigitNumber",
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "phoneNumber must be digit only.",
+                    "code": "nonDigitNumber",
+                }
+            )
         if not v.validate_phone(phoneNumber):
-            raise serializers.ValidationError({
-                "error": "phoneNumber is not unique",
-                "code": "nonUniquePhoneNumber",
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "phoneNumber is not unique",
+                    "code": "nonUniquePhoneNumber",
+                }
+            )
         return phoneNumber
 
     def validate_email(self, email):
@@ -72,7 +80,25 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(max_length=250)
 
 
+class UserContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = m.User
+        fields = [
+            "username",
+            "nickname",
+            "first_name",
+            "last_name",
+            "profile",
+            "biography",
+            "total_followers",
+            "total_followings",
+        ]
+
+
 class UserDataSerializer(serializers.ModelSerializer):
+    hideStoryUsers = UserContactSerializer(many=True, source="hide_story")
+    closeFriendUsers = UserContactSerializer(many=True, source="close_friends")
+
     class Meta:
         model = m.User
         fields = [
@@ -86,4 +112,15 @@ class UserDataSerializer(serializers.ModelSerializer):
             "phone_number",
             "total_followers",
             "total_followings",
+            "follow_requests",
+            "hideStoryUsers",
+            "closeFriendUsers",
         ]
+        read_only_fields = [
+            "follow_requests",
+            "total_followers",
+            "total_followings",
+            "hideStoryUsers",
+            "closeFriendUsers",
+        ]
+        write_only_fields = ["password"]
