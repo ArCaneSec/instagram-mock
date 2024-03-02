@@ -126,4 +126,11 @@ def follow(request, user_id):
 @api_view(["PATCH"])
 @authenticate
 def edit_profile(request):
-    pass
+    serializer = s.UserDataSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(
+            {"message": "successfully changed profile data."},
+            status.HTTP_200_OK,
+        )
+    return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)

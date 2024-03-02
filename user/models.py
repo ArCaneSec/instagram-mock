@@ -65,6 +65,10 @@ class User(BasicUserInfo):
     @property
     def total_followings(self):
         return self.followings.count()
+    
+    @property
+    def total_follow_requests(self):
+        return self.follow_requests.count()
 
     def save(self, *args, **kwargs):
         self.password = utils.make_password(self.password, self.salt)
@@ -77,17 +81,6 @@ class User(BasicUserInfo):
                 "in order to sign up."
             )
         super().save(*args, **kwargs)
-
-    @staticmethod
-    def login(username: str, password: str) -> Optional["User"]:
-        try:
-            user = User.objects.get(username=username, is_active=False)
-        except User.DoesNotExist:
-            return None
-
-        if user.password == utils.make_password(password, user.salt):
-            return user
-        return None
 
     @staticmethod
     def _create_test_user(username: str, is_private: bool = False) -> "User":

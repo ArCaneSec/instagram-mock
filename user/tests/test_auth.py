@@ -12,16 +12,17 @@ class AuthTest(APITestCase):
     def setUp(self):
         user = User._create_test_user("test")
         self.data = {
-            "username": "test",
-            "nickname": "test nickname",
-            "first_name": "test first_name",
-            "last_name": "test last_name",
+            "userName": "test",
+            "nickName": "test nickname",
+            "firstName": "test first_name",
+            "lastName": "test last_name",
             "profile": None,
             "biography": None,
+            "phoneNumber": "test",
             "email": "test@test.com",
-            "phone_number": "test",
-            "total_followers": 0,
-            "total_followings": 0,
+            "totalFollowers": 0,
+            "totalFollowings": 0,
+            "totalFollowRequests": 0
         }
         self.token = generate_jwt_token(user, generate_expire_date())
         self.url = reverse("user:dashboard")

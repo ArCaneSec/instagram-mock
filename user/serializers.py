@@ -86,41 +86,45 @@ class UserContactSerializer(serializers.ModelSerializer):
         fields = [
             "username",
             "nickname",
-            "first_name",
-            "last_name",
-            "profile",
-            "biography",
-            "total_followers",
-            "total_followings",
         ]
 
 
 class UserDataSerializer(serializers.ModelSerializer):
-    hideStoryUsers = UserContactSerializer(many=True, source="hide_story")
-    closeFriendUsers = UserContactSerializer(many=True, source="close_friends")
+    userName = serializers.CharField(source="username")
+    nickName = serializers.CharField(source="nickname")
+    firstName = serializers.CharField(source="first_name")
+    lastName = serializers.CharField(source="last_name")
+    phoneNumber = serializers.CharField(source="phone_number")
+    totalFollowers = serializers.IntegerField(source="total_followers")
+    totalFollowings = serializers.IntegerField(source="total_followings")
+    totalFollowRequests = serializers.IntegerField(
+        source="total_follow_requests"
+    )
 
     class Meta:
         model = m.User
         fields = [
-            "username",
-            "nickname",
-            "first_name",
-            "last_name",
+            "userName",
+            "nickName",
+            "firstName",
+            "lastName",
             "profile",
             "biography",
             "email",
-            "phone_number",
-            "total_followers",
-            "total_followings",
-            "follow_requests",
-            "hideStoryUsers",
-            "closeFriendUsers",
+            "phoneNumber",
+            "totalFollowers",
+            "totalFollowings",
+            "totalFollowRequests",
         ]
         read_only_fields = [
-            "follow_requests",
-            "total_followers",
-            "total_followings",
-            "hideStoryUsers",
-            "closeFriendUsers",
+            "totalFollowers",
+            "totalFollowings",
+            "totalFollowRequests",
         ]
         write_only_fields = ["password"]
+
+    def validate(self, attrs):
+        pass
+
+    def create(self, validated_data):
+        pass
