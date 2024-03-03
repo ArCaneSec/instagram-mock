@@ -1,6 +1,8 @@
+import re
 from typing import Optional
 
 from django.db import models as m
+from rest_framework.serializers import ValidationError
 
 from . import utils
 
@@ -30,7 +32,7 @@ class BasicUserInfo(m.Model):
 class User(BasicUserInfo):
     is_private = m.BooleanField(default=False)
     password = m.CharField(max_length=128)
-    salt = m.CharField(default=utils.generate_hash, max_length=100)
+    salt = m.CharField(max_length=100)
     followers = m.ManyToManyField(
         to="self",
         through="Follow",
@@ -65,22 +67,96 @@ class User(BasicUserInfo):
     @property
     def total_followings(self):
         return self.followings.count()
-    
+
     @property
     def total_follow_requests(self):
         return self.follow_requests.count()
 
     def save(self, *args, **kwargs):
+        self.salt = utils.generate_hash()
         self.password = utils.make_password(self.password, self.salt)
+
         if not self.nickname:
             self.nickname = self.username
-        self.username = self.username.lower()
+
         if not (self.email or self.phone_number):
             raise ValueError(
                 "You have to provide an email address or phone number "
                 "in order to sign up."
             )
+
         super().save(*args, **kwargs)
+
+    @staticmethod
+    def validate_username(username: str):
+        pattern = r"[a-z][a-z\d._]{2,250}$"
+        if not re.match(pattern, username):
+            raise ValidationError(
+                {
+                    "error": "username is not valid, it must contains "
+                    "between 3, 250 characters, start with absolute character,"
+                    "and must not contains special characters like @#$...",
+                    "code": "invalidUser",
+                }
+            )
+
+        if User.objects.filter(username=username, is_deleted=False):
+            raise ValidationError(
+                {
+                    "error": "username is not unique.",
+                    "code": "nonUniqueUserName",
+                }
+            )
+
+    def validate_phone_number(phone_number: str):
+        if not phone_number.isdigit():
+            raise ValidationError(
+                {
+                    "error": "phoneNumber must be digit only.",
+                    "code": "nonDigitNumber",
+                }
+            )
+        if User.objects.filter(phone_number=phone_number, is_deleted=False):
+            raise ValidationError(
+                {
+                    "error": "phoneNumber is not unique",
+                    "code": "nonUniquePhoneNumber",
+                }
+            )
+        if len(phone_number) != 11:
+            raise ValidationError(
+                {"error": "phone number is not valid.", "code": "invalidValue"}
+            )
+
+    @staticmethod
+    def validate_email(email: str):
+        if User.objects.filter(email=email, is_deleted=False):
+            raise ValidationError(
+                {"error": "email is not unique.", "code": "nonUniqueEmail"}
+            )
+
+    @staticmethod
+    def validate_password(password: str) -> str:
+        """
+        Checking if password is strong enough.
+
+        Args:
+            'password' (str)
+
+        Returns:
+            str: hashed value of password.
+        """
+
+        pattern = r"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$"
+        if not re.match(pattern, password):
+            raise ValidationError(
+                {
+                    "error": "Password must contain atleast 8 characters,"
+                    " 1 one lowercase and 1 uppercase letter and 1 digit.",
+                    "code": "weakPassword",
+                }
+            )
+        return utils.make_password(password, utils.generate_hash())
 
     @staticmethod
     def _create_test_user(username: str, is_private: bool = False) -> "User":

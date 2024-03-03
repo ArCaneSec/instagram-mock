@@ -6,6 +6,14 @@ from . import models as m
 from . import validators as v
 
 
+class LowerCharField(serializers.CharField):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def to_internal_value(self, data):
+        return data.lower()
+
+
 class SignUpRequest(serializers.Serializer):
     username = serializers.CharField(
         max_length=250,
@@ -20,7 +28,9 @@ class SignUpRequest(serializers.Serializer):
         max_length=11, required=False, source="phone_number"
     )
     email = serializers.EmailField(required=False)
-    password = serializers.CharField(max_length=250)
+    password = serializers.CharField(
+        max_length=250, validators=[m.User.validate_password]
+    )
 
     def validate_username(self, username):
         if not v.validate_username(username):
@@ -31,18 +41,6 @@ class SignUpRequest(serializers.Serializer):
                 }
             )
         return username
-
-    def validate_password(self, password: str) -> bool:
-        pattern = r"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$"
-        if not re.match(pattern, password):
-            raise serializers.ValidationError(
-                {
-                    "error": "Password must contain atleast 8 characters,"
-                    " 1 one lowercase and 1 uppercase letter and 1 digit.",
-                    "code": "weakPassword",
-                }
-            )
-        return password
 
     def validate_phoneNumber(self, phoneNumber: str):
         if not phoneNumber.isdigit():
@@ -90,15 +88,22 @@ class UserContactSerializer(serializers.ModelSerializer):
 
 
 class UserDataSerializer(serializers.ModelSerializer):
-    userName = serializers.CharField(source="username")
-    nickName = serializers.CharField(source="nickname")
-    firstName = serializers.CharField(source="first_name")
-    lastName = serializers.CharField(source="last_name")
-    phoneNumber = serializers.CharField(source="phone_number")
-    totalFollowers = serializers.IntegerField(source="total_followers")
-    totalFollowings = serializers.IntegerField(source="total_followings")
+    userName = LowerCharField(source="username", read_only=True)
+    nickName = serializers.CharField(source="nickname", required=False)
+    firstName = serializers.CharField(source="first_name", required=False)
+    lastName = serializers.CharField(source="last_name", required=False)
+    profile = serializers.ImageField(required=False)
+    biography = serializers.CharField(max_length=1000, required=False)
+    email = serializers.EmailField(required=False)
+    phoneNumber = serializers.CharField(source="phone_number", required=False)
+    totalFollowers = serializers.IntegerField(
+        source="total_followers", read_only=True
+    )
+    totalFollowings = serializers.IntegerField(
+        source="total_followings", read_only=True
+    )
     totalFollowRequests = serializers.IntegerField(
-        source="total_follow_requests"
+        source="total_follow_requests", read_only=True
     )
 
     class Meta:
@@ -116,15 +121,26 @@ class UserDataSerializer(serializers.ModelSerializer):
             "totalFollowings",
             "totalFollowRequests",
         ]
-        read_only_fields = [
-            "totalFollowers",
-            "totalFollowings",
-            "totalFollowRequests",
-        ]
-        write_only_fields = ["password"]
 
-    def validate(self, attrs):
-        pass
+    def validate_email(self, email):
+        m.User.validate_email(email)
+        return email
 
-    def create(self, validated_data):
-        pass
+    def validate_phoneNumber(self, phone_number):
+        m.User.validate_phone_number(phone_number)
+        return phone_number
+
+    def validate(self, attrs: dict):
+        if not attrs:
+            raise serializers.ValidationError(
+                {"error": "invalid data", "code": "invalidData"}
+            )
+        user = self.context["request"].user
+        for key, value in attrs.items():
+            if getattr(user, key) == value:
+                attrs.pop(key)
+
+        return super().validate(attrs)
+
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
