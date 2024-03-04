@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Callable
 
 from post.core import JsonSerializableValueError
+from utils.auth_utils import make_password
 from utils.decorators import validation_required
 from utils.validators import Validator
 
@@ -99,7 +100,7 @@ class UnFollow(Follows):
 class CloseFriend(Validator):
     request_user: m.User
     target_user_id: int
-    _target_user: m.User = field(default=False, repr=False)
+    _target_user: m.User = field(init=False, repr=False)
 
     def _fetch_target_user(self):
         self._target_user = (
@@ -138,9 +139,9 @@ class CloseFriend(Validator):
 @dataclass
 class AddCloseFriend(CloseFriend):
     def is_valid(self):
-        return super().is_valid([self.check_user_not_in_cf_already])
+        return super().is_valid([self._check_user_not_in_cf_already])
 
-    def check_user_not_in_cf_already(self):
+    def _check_user_not_in_cf_already(self):
         if self.request_user.close_friends.filter(pk=self._target_user.pk):
             raise JsonSerializableValueError(
                 {
@@ -149,16 +150,16 @@ class AddCloseFriend(CloseFriend):
                 }
             )
 
+    @validation_required
     def add_close_friend(self):
         self.request_user.close_friends.add(self._target_user)
-        self._validation_passed = False
 
 
 class RemoveCloseFriend(CloseFriend):
     def is_valid(self):
-        return super().is_valid([self.check_user_is_in_cf_already])
+        return super().is_valid([self._check_user_is_in_cf_already])
 
-    def check_user_is_in_cf_already(self):
+    def _check_user_is_in_cf_already(self):
         if not self.request_user.close_friends.filter(pk=self._target_user.pk):
             raise JsonSerializableValueError(
                 {
@@ -167,6 +168,64 @@ class RemoveCloseFriend(CloseFriend):
                 }
             )
 
+    @validation_required
     def remove_close_friend(self):
         self.request_user.close_friends.remove(self._target_user)
-        self._validation_passed = False
+
+
+@dataclass
+class ChangeSettings(Validator):
+    user: m.User
+    data: dict
+    revoke_token_required: bool = field(default=False, init=False)
+    _change_salt: bool = field(default=False, init=False)
+
+    def is_valid(self) -> bool:
+        try:
+            self._validate_password()
+            self._validate_username()
+        except JsonSerializableValueError as e:
+            self._error = e
+            return False
+
+        self._validation_passed = True
+        return True
+
+    def _validate_password(self) -> bool:
+        if not (password := self.data.get("password")):
+            return
+        
+        self.revoke_token_required = True
+
+        if make_password(password, self.user.salt) != self.user.password:
+            raise JsonSerializableValueError(
+                {
+                    "error": "password is invalid.",
+                    "code": "invalidPassword",
+                }
+            )
+        self._change_salt = True
+
+        if new_password := self.data.pop("new_password", None):
+            self.data["password"] = new_password
+
+    def _validate_username(self):
+        if not (username := self.data.get("username")):
+            return
+
+        if m.User.is_username_duplicate(username):
+            raise JsonSerializableValueError(
+                {
+                    "error": "username already exists.",
+                    "code": "duplicateUsername",
+                }
+            )
+
+    @validation_required
+    def change_settings(self) -> bool:
+        for key, value in self.data.items():
+            setattr(self.user, key, value)
+
+        self.user.save(
+            change_salt=self._change_salt,
+        )

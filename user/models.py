@@ -1,10 +1,9 @@
 import re
-from typing import Optional
 
 from django.db import models as m
 from rest_framework.serializers import ValidationError
 
-from . import utils
+from utils import auth_utils as utils
 
 # Create your models here.
 
@@ -73,8 +72,9 @@ class User(BasicUserInfo):
         return self.follow_requests.count()
 
     def save(self, *args, **kwargs):
-        self.salt = utils.generate_hash()
-        self.password = utils.make_password(self.password, self.salt)
+        if kwargs.pop("change_salt", None):
+            self.salt = utils.generate_hash()
+            self.password = utils.make_password(self.password, self.salt)
 
         if not self.nickname:
             self.nickname = self.username
@@ -86,6 +86,12 @@ class User(BasicUserInfo):
             )
 
         super().save(*args, **kwargs)
+
+    @staticmethod
+    def is_username_duplicate(username: str) -> bool:
+        return bool(
+            User.objects.filter(username=username, is_deleted=False).first()
+        )
 
     @staticmethod
     def validate_username(username: str):
@@ -136,15 +142,12 @@ class User(BasicUserInfo):
             )
 
     @staticmethod
-    def validate_password(password: str) -> str:
+    def validate_password(password: str):
         """
         Checking if password is strong enough.
 
         Args:
             'password' (str)
-
-        Returns:
-            str: hashed value of password.
         """
 
         pattern = r"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$"
@@ -156,7 +159,6 @@ class User(BasicUserInfo):
                     "code": "weakPassword",
                 }
             )
-        return utils.make_password(password, utils.generate_hash())
 
     @staticmethod
     def _create_test_user(username: str, is_private: bool = False) -> "User":

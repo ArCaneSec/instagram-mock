@@ -4,10 +4,11 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from utils import auth_utils as au
+
 from . import authenticate as auth
 from . import core
 from . import serializers as s
-from . import utils as u
 from .authenticate import authenticate
 
 # Create your views here.
@@ -61,7 +62,7 @@ def login(request):
         res = Response(
             {"message": "successfully logined."}, status.HTTP_200_OK
         )
-        token = auth.generate_jwt_token(user, u.generate_expire_date())
+        token = auth.generate_jwt_token(user, au.generate_expire_date())
         res.set_cookie(
             "token", token, httponly=True, samesite="strict", secure=True
         )
@@ -165,3 +166,30 @@ def close_friend(request, user_id):
             },
             status.HTTP_200_OK,
         )
+
+
+@api_view(["PATCH"])
+@authenticate
+def settings(request):
+    serializer = s.UserSettingsSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+    validator = core.ChangeSettings(request.user, serializer.validated_data)
+    if not validator.is_valid():
+        return Response(validator.errors, status.HTTP_400_BAD_REQUEST)
+
+    validator.change_settings()
+    res = Response(
+        {"message": "settings updated successfully."}, status.HTTP_200_OK
+    )
+    if validator.revoke_token_required:
+        res.set_cookie(
+            "token",
+            auth.generate_jwt_token(request.user, au.generate_expire_date()),
+            httponly=True,
+            samesite="strict",
+            secure=True,
+        )
+
+    return res

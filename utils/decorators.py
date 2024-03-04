@@ -12,5 +12,6 @@ def validation_required(func: Callable):
             )
 
         func(self, *args, **kwargs)
+        self._validation_passed = False
 
     return wrapper

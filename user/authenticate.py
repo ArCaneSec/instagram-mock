@@ -1,28 +1,22 @@
-import jwt
 import datetime
-from dataclasses import dataclass
 from functools import wraps
 from typing import Callable, Optional
 
-from django.conf import settings
+import jwt
 from django.http.response import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from utils import auth_utils as utils
+from utils.configs import _JWT_CONFIG
+
 from . import models as m
-from . import utils
-
-
-@dataclass
-class _JWT_CONFIG:
-    alg: str = "HS256"
-    secret: str = settings.SECRET_KEY
 
 
 def generate_jwt_for_test_user(user: m.User) -> str:
-    return generate_jwt_token(user, utils.generate_expire_date())
+    return generate_jwt_token(user, utils.generate_expire_date(), user.salt)
 
 
 def login(username: str, password: str) -> Optional[m.User]:
@@ -38,10 +32,7 @@ def login(username: str, password: str) -> Optional[m.User]:
 
 def generate_jwt_token(user: m.User, expire_date: datetime.datetime) -> str:
     return jwt.encode(
-        {
-            "username": user.username,
-            "exp": expire_date,
-        },
+        {"username": user.username, "exp": expire_date, "salt": user.salt},
         key=_JWT_CONFIG.secret,
         algorithm=_JWT_CONFIG.alg,
     )
@@ -91,4 +82,7 @@ def _validate_jwt_token(
 
 def _get_user_from_jwt_token(decoded_token: dict) -> Optional[m.User]:
     username = decoded_token["username"]
-    return m.User.objects.filter(username=username, is_active=True).first()
+    salt = decoded_token["salt"]
+    return m.User.objects.filter(
+        username=username, salt=salt, is_active=True
+    ).first()

@@ -1,5 +1,3 @@
-import re
-
 from rest_framework import serializers
 
 from . import models as m
@@ -146,7 +144,29 @@ class UserDataSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class UserSettingSerializer(serializers.Serializer):
-    userName = serializers.CharField(source="username")
-    password = serializers.CharField()
-    close_friends = serializers.CharField()
+class UserSettingsSerializer(serializers.Serializer):
+    userName = LowerCharField(source="username", required=False)
+    password = serializers.CharField(required=False)
+    newPassword = serializers.CharField(
+        required=False,
+        validators=[m.User.validate_password],
+        source="new_password",
+    )
+
+    def validate(self, attrs):
+        if not attrs:
+            raise serializers.ValidationError(
+                {"error": "invalid data.", "code": "invalidData"}
+            )
+        if (
+            attrs.get("username") or attrs.get("new_password")
+        ) and not attrs.get("password"):
+            raise serializers.ValidationError(
+                {
+                    "error": "you cannot change these fields"
+                    " without entering your password.",
+                    "code": "passwordRequired",
+                }
+            )
+
+        return super().validate(attrs)

@@ -2,6 +2,8 @@ import datetime
 from hashlib import sha256
 from random import randint
 
+from utils.configs import _JWT_CONFIG
+
 
 def generate_hash() -> str:
     salt = map(chr, [randint(33, 129) for _ in range(1, 6)])
@@ -13,4 +15,6 @@ def make_password(password: str, salt: str):
 
 
 def generate_expire_date() -> datetime.datetime:
-    return datetime.datetime.now() + datetime.timedelta(days=14)
+    return datetime.datetime.now() + datetime.timedelta(
+        days=_JWT_CONFIG.expire_day_duration
+    )
