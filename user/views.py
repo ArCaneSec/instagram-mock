@@ -136,3 +136,32 @@ def edit_profile(request):
             status.HTTP_200_OK,
         )
     return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST", "DELETE"])
+@authenticate
+def close_friend(request, user_id):
+    if request.method == "POST":
+        validator = core.AddCloseFriend(request.user, user_id)
+        if not validator.is_valid():
+            return Response(validator.errors, status.HTTP_400_BAD_REQUEST)
+
+        validator.add_close_friend()
+        return Response(
+            {"message": "successfully added user to your close friends list."},
+            status.HTTP_201_CREATED,
+        )
+
+    else:
+        validator = core.RemoveCloseFriend(request.user, user_id)
+        if not validator.is_valid():
+            return Response(validator.errors, status.HTTP_400_BAD_REQUEST)
+
+        validator.remove_close_friend()
+        return Response(
+            {
+                "message": "successfully removed user"
+                " from your close friends list."
+            },
+            status.HTTP_200_OK,
+        )

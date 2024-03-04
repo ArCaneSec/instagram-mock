@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from functools import wraps
 from typing import Callable
 
 from .exceptions import JsonSerializableValueError
@@ -19,18 +18,3 @@ class Validator(ABC):
     @property
     def errors(self):
         return self._error.message
-
-
-def validation_required(func: Callable):
-
-    @wraps(func)
-    def wrapper(self):
-        if not self._validation_passed:
-            raise PermissionError(
-                f"Cannot call {func.__name__} before calling is_valid()."
-            )
-
-        func(self)
-        self._validation_passed = False
-
-    return wrapper

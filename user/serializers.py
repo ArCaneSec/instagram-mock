@@ -144,3 +144,9 @@ class UserDataSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         return super().update(instance, validated_data)
+
+
+class UserSettingSerializer(serializers.Serializer):
+    userName = serializers.CharField(source="username")
+    password = serializers.CharField()
+    close_friends = serializers.CharField()
