@@ -11,6 +11,17 @@ from . import models as m
 
 @dataclass
 class Follows(Validator):
+    """
+    Base class for follow/unfollow's logic classes.
+    Here we will check if the target user is valid and active,
+    then run other validators for child classes.
+
+    Attributes:
+        user_id: Target user's id.
+        from_user: The request user.
+        _user_obj: Target user's 'User' object.
+    """
+
     user_id: int
     from_user: m.User
     _user_obj: m.User = field(repr=False, init=False)
@@ -27,6 +38,7 @@ class Follows(Validator):
         return True
 
     def _validate_user(self):
+        
         valid_user = (
             m.User.objects.filter(pk=self.user_id, is_active=True)
             .exclude(pk=self.from_user.pk)
@@ -194,7 +206,7 @@ class ChangeSettings(Validator):
     def _validate_password(self) -> bool:
         if not (password := self.data.get("password")):
             return
-        
+
         self.revoke_token_required = True
 
         if make_password(password, self.user.salt) != self.user.password:

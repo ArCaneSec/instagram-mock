@@ -1,4 +1,5 @@
 import re
+from typing import Optional
 
 from django.db import models as m
 from rest_framework.serializers import ValidationError
@@ -162,6 +163,7 @@ class User(BasicUserInfo):
 
     @staticmethod
     def _create_test_user(username: str, is_private: bool = False) -> "User":
+        salt = utils.generate_hash()
         return User.objects.create(
             username=username,
             nickname="%s nickname" % username,
@@ -169,7 +171,8 @@ class User(BasicUserInfo):
             last_name="%s last_name" % username,
             email="%s@%s.com" % (username, username),
             phone_number=username if len(username) < 12 else username[0:12],
-            password=username,
+            salt=salt,
+            password=utils.make_password(username, salt),
             is_private=is_private,
         )
 

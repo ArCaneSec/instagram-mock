@@ -16,12 +16,12 @@ from . import models as m
 
 
 def generate_jwt_for_test_user(user: m.User) -> str:
-    return generate_jwt_token(user, utils.generate_expire_date(), user.salt)
+    return generate_jwt_token(user, utils.generate_expire_date())
 
 
 def login(username: str, password: str) -> Optional[m.User]:
     try:
-        user = m.User.objects.get(username=username)
+        user = m.User.objects.get(username=username, is_active=True)
     except m.User.DoesNotExist:
         return None
 

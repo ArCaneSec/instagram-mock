@@ -5,7 +5,7 @@ from rest_framework.test import APITestCase
 
 from ..authenticate import generate_jwt_token
 from ..models import User
-from ..utils import generate_expire_date
+from utils.auth_utils import generate_expire_date
 
 
 class AuthTest(APITestCase):

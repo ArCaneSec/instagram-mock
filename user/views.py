@@ -97,6 +97,13 @@ def dashboard(request):
 @api_view(["POST", "DELETE"])
 @authenticate
 def follow(request, user_id):
+    """
+    Responsible for follow and unfollowing users.
+    User's must profile their target user id in path parameters.
+
+    Use 'POST' for follow and 'DELETE' for unfollow.
+    """
+
     if request.method == "POST":
         validator = core.Follow(user_id, request.user)
         if not validator.is_valid():
@@ -127,6 +134,13 @@ def follow(request, user_id):
 @api_view(["PATCH"])
 @authenticate
 def edit_profile(request):
+    """
+    Responsible for editing user's profile data.
+    You can find allowed fields in 'UserDataSerializer'.
+
+    New data will passes the same validations in sign up.
+    """
+
     serializer = s.UserDataSerializer(
         data=request.data, context={"request": request}
     )
@@ -142,6 +156,13 @@ def edit_profile(request):
 @api_view(["POST", "DELETE"])
 @authenticate
 def close_friend(request, user_id):
+    """
+    Single close friend add and remove.
+    Target user must follow request user in order to become a close friend.
+
+    Use 'POST' for follow and 'DELETE' for unfollow.
+    """
+
     if request.method == "POST":
         validator = core.AddCloseFriend(request.user, user_id)
         if not validator.is_valid():
@@ -171,6 +192,13 @@ def close_friend(request, user_id):
 @api_view(["PATCH"])
 @authenticate
 def settings(request):
+    """
+    Users can change their settings data from this endpoint.
+    You can find all allowed fields for change in 'UserSettingsSerializer'.
+
+    Changing password and username will result in reseting user's salt.
+    """
+
     serializer = s.UserSettingsSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)

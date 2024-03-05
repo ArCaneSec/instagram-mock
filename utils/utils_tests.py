@@ -29,8 +29,8 @@ class ViewTests(APITestCase):
         self, data: dict = None, content_type: str = "json"
     ) -> HttpResponse:
         return self.client.post(self.url, data, content_type)
-    
+
     def launch_delete(
-    self, data: dict = None, content_type: str = "json"
-) -> HttpResponse:
+        self, data: dict = None, content_type: str = "json"
+    ) -> HttpResponse:
         return self.client.delete(self.url, data, content_type)

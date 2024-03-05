@@ -1,9 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import jwt
 from django.conf import settings
 from django.urls import reverse
 from rest_framework.test import APITestCase
+
+from utils.configs import _JWT_CONFIG
 
 from .. import models as m
 
@@ -30,7 +32,10 @@ class Login(APITestCase):
         )
         exp_datetime = datetime.fromtimestamp(token["exp"])
         self.assertGreater(
-            exp_datetime, datetime.now(), "Invalid expire date."
+            exp_datetime,
+            datetime.now()
+            + timedelta(days=_JWT_CONFIG.expire_day_duration),
+            "Invalid expire date.",
         )
 
     def test_invalid_username(self):
