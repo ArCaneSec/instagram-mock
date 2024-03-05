@@ -1,6 +1,10 @@
+import datetime
 from dataclasses import dataclass, field
 from typing import Callable
 
+from django.db.models import QuerySet
+
+from post import models as pm
 from post.core import JsonSerializableValueError
 from utils.auth_utils import make_password
 from utils.decorators import validation_required
@@ -38,7 +42,6 @@ class Follows(Validator):
         return True
 
     def _validate_user(self):
-        
         valid_user = (
             m.User.objects.filter(pk=self.user_id, is_active=True)
             .exclude(pk=self.from_user.pk)
@@ -241,3 +244,83 @@ class ChangeSettings(Validator):
         self.user.save(
             change_salt=self._change_salt,
         )
+
+
+@dataclass
+class Timeline:
+    request_user: m.User
+    _timeline_posts: QuerySet[pm.Post] = field(
+        default_factory=list, init=False
+    )
+
+    def fetch_posts(self) -> QuerySet[pm.Post]:
+        followings = self._fetch_followings()
+        posts = self._fetch_recent_followings_posts(followings)
+        if posts.count() >= 5:
+            return self._timeline_posts
+
+        related_posts = self._fetch_related_posts(5 - posts.count())
+        return posts | related_posts if related_posts else posts
+
+    def _fetch_followings(self):
+        followings = (
+            m.Follow.objects.filter(follower=self.request_user)
+            .all()
+            .order_by("date")
+            .select_related("following")
+        )
+        return [follow_obj.following for follow_obj in followings]
+
+    def _fetch_recent_followings_posts(
+        self, followings: QuerySet[m.Follow]
+    ) -> QuerySet[pm.Post]:
+
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        two_days_ago = now - datetime.timedelta(days=2)
+        posts = pm.Post.objects.filter(
+            user__in=followings, created_at__range=[two_days_ago, now]
+        ).exclude(viewers=self.request_user)[:5]
+        # pm.PostViewsHistory.objects.bulk_create(
+        #     [
+        #         pm.PostViewsHistory(user=self.request_user, post=post)
+        #         for post in posts
+        #     ]
+        # )
+        return posts
+
+    def _fetch_related_posts(self, max: int) -> QuerySet[pm.Post]:
+        recent_liked_posts_obj = pm.PostLikes.objects.filter(
+            user=self.request_user
+        ).select_related("post")[:20]
+        recent_liked_posts = [
+            liked_post.post for liked_post in recent_liked_posts_obj
+        ]
+
+        duplicate_tags = set()
+        tags = set()
+        posts: QuerySet[pm.Post] = None
+        inserted = 0
+
+        while True:
+            for post in recent_liked_posts:
+                post: pm.Post
+                tags.add(
+                    post.hashtags.all()
+                    .values_list("title", flat=True)
+                    .exclude(title__in=duplicate_tags)
+                    .distinct()
+                )
+                if len(tags) >= 5:
+                    duplicate_tags.update(tags)
+                    tags = []
+                    break
+            query = pm.Post.objects.filter(
+                hashtags__title__in=[tags]
+            ).distinct()[:max]
+
+            posts.union(query) if posts else query
+            inserted += query.count()
+            if not 5 > inserted > 0:
+                break
+
+        return posts

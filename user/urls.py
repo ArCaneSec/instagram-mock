@@ -16,4 +16,5 @@ urlpatterns = [
         "close-friend/<int:user_id>", views.close_friend, name="close_friend"
     ),
     path("settings/", views.settings, name="settings"),
+    path("timeline/", views.timeline, name="timeline"),
 ]

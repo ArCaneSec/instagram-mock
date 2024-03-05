@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from post.serializers import PostSerializer
 from utils import auth_utils as au
 
 from . import authenticate as auth
@@ -221,3 +222,12 @@ def settings(request):
         )
 
     return res
+
+
+@api_view(["GET"])
+@authenticate
+def timeline(request):
+    timeline_core = core.Timeline(request.user)
+    posts = timeline_core.fetch_posts()
+    serializer = PostSerializer(posts, many=True)
+    return Response(serializer.data, status.HTTP_200_OK)

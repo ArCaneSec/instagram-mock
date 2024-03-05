@@ -8,7 +8,7 @@ from user.models import User
 from . import models as m
 
 # Pattern for extracting extension from file names.
-NAME_EXT_PATTERN = r"^[^.\\/<>%#(){}]{1,50}\.(?<=\.)(\w{3,4}$)"
+NAME_EXT_PATTERN = r"^[^.\\/<>%#{}]{1,50}\.(?<=\.)(\w{3,4}$)"
 
 
 class UploadPostFileSerializer(serializers.Serializer):
@@ -53,16 +53,20 @@ class UploadPostFileSerializer(serializers.Serializer):
         valid_extensions["image/png"] = "png"
         # pattern = r"^.[^.\\/<>%#(){}]{1,20}\.(png|jpeg|gif|png|mp4)?$"
         if not (ct_type := valid_extensions.get(content.content_type)):
-            raise serializers.ValidationError({
-                "error": "Invalid file type, supported types are:"
-                " mp4, gif, jpeg, jpg png.",
-                "code": "invalidExtension",
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "Invalid file type, supported types are:"
+                    " mp4, gif, jpeg, jpg png.",
+                    "code": "invalidExtension",
+                }
+            )
         if self.initial_data["extension"] != ct_type:
-            raise serializers.ValidationError({
-                "error": "Name extension and content-type are not consistent.",
-                "code": "inconsistentExtension",
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "Name extension and content-type are not consistent.",
+                    "code": "inconsistentExtension",
+                }
+            )
         if not 1 < content.size / 1024 < 20000:
             raise serializers.ValidationError(
                 {"error": "invalid file size.", "code": "invalidSize"}
@@ -127,12 +131,7 @@ class CreatePostSerializer(serializers.Serializer):
     def create(self, validated_data: dict):
         post_files: QuerySet[m.PostFile] = validated_data.pop("files")
 
-        # Post can have 0 tags, thats why we are passing.
-        try:
-            tags = validated_data.pop("tags")
-        except ValueError:
-            pass
-
+        tags = validated_data.pop("tags", None)
         post = m.Post.objects.create(**validated_data)
 
         # Updating junction table if tags exists.
@@ -142,3 +141,24 @@ class CreatePostSerializer(serializers.Serializer):
         # Changing PostFile's post values from null to 'post' id.
         post_files.update(post=post)
         return post
+
+
+class PostFileSerializer(serializers.ModelSerializer):
+    contentType = serializers.CharField(source="content_type")
+
+    class Meta:
+        model = m.PostFile
+        fields = ["contentType", "content"]
+
+
+class PostSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField()
+    tags = serializers.SlugRelatedField(
+        many=True, slug_field="username", read_only=True
+    )
+    likes = serializers.IntegerField(source="total_likes")
+    files = PostFileSerializer(many=True, source="postfile_set")
+
+    class Meta:
+        model = m.Post
+        fields = ["id", "user", "caption", "tags", "likes", "files"]

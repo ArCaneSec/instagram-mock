@@ -7,6 +7,12 @@ from user import models as u
 # Create your models here.
 
 
+class Hashtag(m.Model):
+    title = m.CharField(max_length=250)
+    created_at = m.DateTimeField(auto_now_add=True)
+    updated_at = m.DateTimeField(auto_now=True)
+
+
 class PostLikes(m.Model):
     user = m.ForeignKey(u.User, on_delete=m.CASCADE)
     post = m.ForeignKey("Post", on_delete=m.CASCADE)
@@ -67,6 +73,19 @@ class Post(m.Model):
         related_name="user_likes",
         blank=True,
     )
+    viewers = m.ManyToManyField(
+        u.User,
+        through="PostViewsHistory",
+        related_name="viewed_posts",
+        symmetrical=False,
+        blank=True,
+    )
+    hashtags = m.ManyToManyField(
+        Hashtag,
+        related_name="posts",
+        symmetrical=False,
+        blank=True
+    )
     created_at = m.DateTimeField(auto_now_add=True)
     updated_at = m.DateTimeField(auto_now=True)
 
@@ -77,3 +96,13 @@ class Post(m.Model):
             user=user, content="tt", post=post, content_type="gif"
         )
         return post
+    
+    @property
+    def total_likes(self):
+        return self.likes.count()
+
+
+class PostViewsHistory(m.Model):
+    user = m.ForeignKey(u.User, on_delete=m.CASCADE)
+    post = m.ForeignKey(Post, on_delete=m.CASCADE)
+    date = m.DateTimeField(auto_now_add=True)
