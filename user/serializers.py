@@ -65,6 +65,17 @@ class SignUpRequest(serializers.Serializer):
         return email
 
     def validate(self, data: dict):
+        email = data.get("email")
+        phone_number = data.get("phone_numer")
+        if not (email or phone_number):
+            raise serializers.ValidationError(
+                {
+                    "error": "You have to provide an email address "
+                    "or phone number "
+                    "in order to sign up.",
+                    "code": "invalidData",
+                }
+            )
         return data
 
     def create(self, validated_data):
@@ -152,6 +163,7 @@ class UserSettingsSerializer(serializers.Serializer):
         validators=[m.User.validate_password],
         source="new_password",
     )
+    isPrivate = serializers.BooleanField(source="is_private", required=False)
 
     def validate(self, attrs):
         if not attrs:

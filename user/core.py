@@ -199,6 +199,7 @@ class ChangeSettings(Validator):
         try:
             self._validate_password()
             self._validate_username()
+            self._validate_privacy_change()
         except JsonSerializableValueError as e:
             self._error = e
             return False
@@ -236,14 +237,39 @@ class ChangeSettings(Validator):
                 }
             )
 
+    def _validate_privacy_change(self):
+        privacy = self.data.get("is_private")
+        if privacy is None:
+            return
+
+        if self.user.is_private == privacy:
+            raise JsonSerializableValueError(
+                {
+                    "error": "your account privacy "
+                    f"is already set to {privacy}.",
+                    "code": "alreadyTheSame",
+                }
+            )
+        if not privacy:
+            self._accept_follow_requests = True
+
     @validation_required
     def change_settings(self) -> bool:
-        for key, value in self.data.items():
-            setattr(self.user, key, value)
+        # for key, value in self.data.items():
+        #     setattr(self.user, key, value)
 
-        self.user.save(
-            change_salt=self._change_salt,
-        )
+        # self.user.save(
+        #     change_salt=self._change_salt,
+        # )
+
+        if (
+            hasattr(self, "_accept_follow_requests")
+            and self._accept_follow_requests
+        ):
+            self.user.followers.add(
+                *self.user.follow_requests.all().values_list("id", flat=True)
+            )
+            m.FollowRequest.objects.filter(to_user=self.user.pk).delete()
 
 
 @dataclass
@@ -304,12 +330,16 @@ class Timeline:
         while True:
             for post in recent_liked_posts:
                 post: pm.Post
-                tags.add(
+                hashtags = (
                     post.hashtags.all()
                     .values_list("title", flat=True)
                     .exclude(title__in=duplicate_tags)
                     .distinct()
                 )
+                if not hashtags:
+                    continue
+
+                tags.add(hashtags)
                 if len(tags) >= 5:
                     duplicate_tags.update(tags)
                     tags = []
