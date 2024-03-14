@@ -79,6 +79,7 @@ class CreatePostSerializer(serializers.Serializer):
     caption = serializers.CharField(max_length=1000, required=False)
     tags = serializers.ListField(required=False, max_length=10)
     files = serializers.ListField(max_length=10)
+    hashtags = serializers.ListField()
 
     def validate_tags(self, tags):
         """
@@ -128,15 +129,37 @@ class CreatePostSerializer(serializers.Serializer):
 
         return pf
 
+    def to_internal_value(self, data):
+        caption = data.get("caption")
+        hashtags_pattern = r"(?:\r|^| )(?:\#)([a-z0-9]{1,250})\b"
+        data["hashtags"] = set(re.findall(hashtags_pattern, caption))
+        return super().to_internal_value(data)
+
+    def validate_hashtags(self, hashtags):
+        hashtags = set(hashtags)
+        db_hashtags_obj = m.Hashtag.objects.filter(title__in=hashtags)
+        db_hashtags = db_hashtags_obj.values_list("title", flat=True)
+        diffs = hashtags.difference(db_hashtags)
+        if not diffs:
+            return db_hashtags_obj.values_list("id", flat=True)
+
+        return m.Hashtag.objects.bulk_create(
+            [m.Hashtag(title=title) for title in diffs]
+        )
+
     def create(self, validated_data: dict):
         post_files: QuerySet[m.PostFile] = validated_data.pop("files")
 
         tags = validated_data.pop("tags", None)
+        hashtags = validated_data.pop("hashtags", None)
         post = m.Post.objects.create(**validated_data)
 
         # Updating junction table if tags exists.
         if tags:
             post.tags.set([user.pk for user in tags])
+
+        if hashtags:
+            post.hashtags.set([hashtag for hashtag in hashtags])
 
         # Changing PostFile's post values from null to 'post' id.
         post_files.update(post=post)
