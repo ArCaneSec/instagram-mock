@@ -143,9 +143,13 @@ class CreatePostSerializer(serializers.Serializer):
         if not diffs:
             return db_hashtags_obj.values_list("id", flat=True)
 
-        return m.Hashtag.objects.bulk_create(
+        m.Hashtag.objects.bulk_create(
             [m.Hashtag(title=title) for title in diffs]
         )
+
+        # Here the hashtags are updated with the newly created ones
+        # since querysets are  lazy.
+        return db_hashtags_obj.values_list("id", flat=True)
 
     def create(self, validated_data: dict):
         post_files: QuerySet[m.PostFile] = validated_data.pop("files")
