@@ -12,11 +12,29 @@ class Hashtag(m.Model):
     created_at = m.DateTimeField(auto_now_add=True)
     updated_at = m.DateTimeField(auto_now=True)
 
+    def __str__(self) -> str:
+        return self.title
+
+    class Meta:
+        verbose_name = "Hashtag"
+        verbose_name_plural = "Hashtags"
+
 
 class PostLikes(m.Model):
     user = m.ForeignKey(u.User, on_delete=m.CASCADE)
     post = m.ForeignKey("Post", on_delete=m.CASCADE)
     date = m.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "PostLike"
+        verbose_name_plural = "PostLikes"
+
+    @staticmethod
+    def fetch_recent_liked_posts(user: u.User, max: int = 20) -> list["Post"]:
+        recent_liked_posts_obj = PostLikes.objects.filter(
+            user=user
+        ).select_related("post")[:20]
+        return [liked_post.post for liked_post in recent_liked_posts_obj]
 
 
 class PostFile(m.Model):
@@ -30,6 +48,10 @@ class PostFile(m.Model):
     content_type = m.CharField(choices=ContentType.choices, max_length=3)
     content = m.FileField(upload_to="static/users/posts/")
     created_at = m.DateField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "PostFile"
+        verbose_name_plural = "PostFiles"
 
     @staticmethod
     def specific_date_uploads(user: u.User, specific_date: date) -> int:
@@ -81,13 +103,13 @@ class Post(m.Model):
         blank=True,
     )
     hashtags = m.ManyToManyField(
-        Hashtag,
-        related_name="posts",
-        symmetrical=False,
-        blank=True
+        Hashtag, related_name="posts", symmetrical=False, blank=True
     )
     created_at = m.DateTimeField(auto_now_add=True)
     updated_at = m.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
 
     @staticmethod
     def _create_test_post(user: u.User, is_active: bool) -> "Post":
@@ -96,7 +118,7 @@ class Post(m.Model):
             user=user, content="tt", post=post, content_type="gif"
         )
         return post
-    
+
     @property
     def total_likes(self):
         return self.likes.count()
@@ -106,3 +128,4 @@ class PostViewsHistory(m.Model):
     user = m.ForeignKey(u.User, on_delete=m.CASCADE)
     post = m.ForeignKey(Post, on_delete=m.CASCADE)
     date = m.DateTimeField(auto_now_add=True)
+

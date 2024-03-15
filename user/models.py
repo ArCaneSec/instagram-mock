@@ -1,6 +1,4 @@
 import re
-from typing import Optional
-
 from django.db import models as m
 from rest_framework.serializers import ValidationError
 

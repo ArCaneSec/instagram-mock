@@ -274,21 +274,31 @@ class ChangeSettings(Validator):
 
 @dataclass
 class Timeline:
+    """
+    This class is responsible for filling users timeline with
+    related posts.
+
+    First we look for user's followings new uploaded posts, if
+    user already seen those posts, then we look for related posts
+    that exists in their liked hashatgs.
+    """
+
     request_user: m.User
-    _timeline_posts: QuerySet[pm.Post] = field(
-        default_factory=list, init=False
-    )
 
     def fetch_posts(self) -> QuerySet[pm.Post]:
         followings = self._fetch_followings()
         posts = self._fetch_recent_followings_posts(followings)
         if posts.count() >= 5:
-            return self._timeline_posts
+            return posts
 
         related_posts = self._fetch_related_posts(5 - posts.count())
         return posts | related_posts if related_posts else posts
 
     def _fetch_followings(self):
+        """
+        Fetching all user's followings.
+        """
+
         followings = (
             m.Follow.objects.filter(follower=self.request_user)
             .all()
@@ -300,34 +310,38 @@ class Timeline:
     def _fetch_recent_followings_posts(
         self, followings: QuerySet[m.Follow]
     ) -> QuerySet[pm.Post]:
+        """
+        Fetching recently uploaded posts by user's followings which
+        user has not seen them yet.
+        """
 
         now = datetime.datetime.now(tz=datetime.timezone.utc)
         two_days_ago = now - datetime.timedelta(days=2)
         posts = pm.Post.objects.filter(
             user__in=followings, created_at__range=[two_days_ago, now]
         ).exclude(viewers=self.request_user)[:5]
-        # pm.PostViewsHistory.objects.bulk_create(
-        #     [
-        #         pm.PostViewsHistory(user=self.request_user, post=post)
-        #         for post in posts
-        #     ]
-        # )
+        pm.PostViewsHistory.objects.bulk_create(
+            [
+                pm.PostViewsHistory(user=self.request_user, post=post)
+                for post in posts
+            ]
+        )
         return posts
 
     def _fetch_related_posts(self, max: int) -> QuerySet[pm.Post]:
-        recent_liked_posts_obj = pm.PostLikes.objects.filter(
-            user=self.request_user
-        ).select_related("post")[:20]
-        recent_liked_posts = [
-            liked_post.post for liked_post in recent_liked_posts_obj
-        ]
-
+        """
+        Extracting user's liked post's hashtags, then fetching
+        newly uploaded posts containing those hashtags.
+        """
+        
+        recent_liked_posts = pm.PostLikes.fetch_recent_liked_posts(
+            self.request_user
+        )
         duplicate_tags = set()
         tags = set()
-        posts: QuerySet[pm.Post] = None
-        inserted = 0
+        posts = None
 
-        while True:
+        while len(recent_liked_posts) != 0:
             for post in recent_liked_posts:
                 post: pm.Post
                 hashtags = (
@@ -336,21 +350,33 @@ class Timeline:
                     .exclude(title__in=duplicate_tags)
                     .distinct()
                 )
+                # Removing so we dont look for duplicate hashtags.
+                recent_liked_posts.remove(post)
                 if not hashtags:
                     continue
 
-                tags.add(hashtags)
+                tags.update(hashtags)
                 if len(tags) >= 5:
                     duplicate_tags.update(tags)
                     tags = []
                     break
+                
             query = pm.Post.objects.filter(
-                hashtags__title__in=[tags]
-            ).distinct()[:max]
+                hashtags__title__in=tags
+            ).exclude(viewers=self.request_user).distinct()[:max]
 
-            posts.union(query) if posts else query
-            inserted += query.count()
-            if not 5 > inserted > 0:
+            if posts:
+                posts.union(query)
+            else:
+                posts = query
+
+            if not 5 > len(posts) > 0:
                 break
 
+        pm.PostViewsHistory.objects.bulk_create(
+            [
+                pm.PostViewsHistory(user=self.request_user, post=post)
+                for post in posts
+            ]
+        )
         return posts
