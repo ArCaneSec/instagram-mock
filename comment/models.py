@@ -14,7 +14,7 @@ class CommentLikes(m.Model):
 
 class Comment(m.Model):
     user = m.ForeignKey(u.User, on_delete=m.CASCADE)
-    post = m.ForeignKey(p.Post, on_delete=m.CASCADE)
+    post = m.ForeignKey(p.Post, on_delete=m.CASCADE, related_name="comments")
     content = m.TextField()
     created_at = m.DateTimeField(auto_now_add=True)
     updated_at = m.DateTimeField(auto_now=True)
@@ -28,3 +28,7 @@ class Comment(m.Model):
     tags = m.ManyToManyField(
         u.User, related_name="user_comment_tags", blank=True
     )
+
+    @property
+    def total_likes(self):
+        return self.likes.count()

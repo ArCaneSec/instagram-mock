@@ -3,6 +3,7 @@ import re
 from django.db.models import QuerySet
 from rest_framework import serializers
 
+from comment.models import Comment
 from user.models import User
 
 from . import models as m
@@ -178,14 +179,42 @@ class PostFileSerializer(serializers.ModelSerializer):
         fields = ["contentType", "content"]
 
 
+class UserMinimalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username", "profile"]
+
+
+class CommentSerializer(serializers.Serializer):
+    user = UserMinimalSerializer()
+    content = serializers.CharField(max_length=1000)
+    createdAt = serializers.DateTimeField(source="created_at")
+    likes = serializers.IntegerField(source="total_likes")
+
+
 class PostSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField()
-    tags = serializers.SlugRelatedField(
-        many=True, slug_field="username", read_only=True
-    )
+    user = UserMinimalSerializer()
+    tags = UserMinimalSerializer(many=True)
+    comments = CommentSerializer(many=True)
     likes = serializers.IntegerField(source="total_likes")
     files = PostFileSerializer(many=True, source="postfile_set")
 
     class Meta:
         model = m.Post
-        fields = ["id", "user", "caption", "tags", "likes", "files"]
+        fields = [
+            "id",
+            "user",
+            "caption",
+            "tags",
+            "comments",
+            "likes",
+            "files",
+        ]
+
+
+class PostCommentSerializer(serializers.Serializer):
+    content = serializers.CharField(max_length=1000)
+
+
+class DeletePostCommentSerializer(serializers.Serializer):
+    comment_id = serializers.IntegerField()

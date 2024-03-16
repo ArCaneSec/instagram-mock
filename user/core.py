@@ -360,7 +360,6 @@ class Timeline:
                     duplicate_tags.update(tags)
                     tags = []
                     break
-                
             query = pm.Post.objects.filter(
                 hashtags__title__in=tags
             ).exclude(viewers=self.request_user).distinct()[:max]

@@ -5,17 +5,19 @@ from typing import Callable
 
 from rest_framework.serializers import FileField
 
+from comment import models as cm
 from user import models as u
+from utils.decorators import validation_required
 from utils.exceptions import JsonSerializableValueError
+from utils.validators import Validator
+
 from . import models as m
 
 
 @dataclass
-class LikePost(ABC):
+class PostValidator(Validator):
     user: u.User
     post_id: int
-    _validation_passed: bool = field(init=False, repr=False, default=False)
-    _error_message: str = field(init=False, repr=False)
     _post_obj: m.Post = field(init=False, repr=False)
 
     def is_valid(self, custom_validators: list[Callable]):
@@ -24,7 +26,7 @@ class LikePost(ABC):
             [func() for func in custom_validators]
 
         except JsonSerializableValueError as e:
-            self._error_message = e.message
+            self._error = e
             return False
 
         self._validation_passed = True
@@ -45,13 +47,9 @@ class LikePost(ABC):
                 "running validations first."
             )
 
-    @property
-    def errors(self):
-        return self._error_message
-
 
 @dataclass
-class LikePostCreate(LikePost):
+class PostLike(PostValidator):
 
     def is_valid(self):
         return super().is_valid([self._check_user_havent_liked])
@@ -61,10 +59,12 @@ class LikePostCreate(LikePost):
             user=self.user, post=self._post_obj
         ).first()
         if user_liked:
-            raise JsonSerializableValueError({
-                "error": "you have already liked this post.",
-                "code": "duplicateLike",
-            })
+            raise JsonSerializableValueError(
+                {
+                    "error": "you have already liked this post.",
+                    "code": "duplicateLike",
+                }
+            )
 
     def like_post(self):
         self._check_validation_passed()
@@ -72,7 +72,7 @@ class LikePostCreate(LikePost):
 
 
 @dataclass
-class RemovePostLike(LikePost):
+class DeletePostLike(PostValidator):
     _post_like_obj: m.PostLikes = field(init=False, repr=False)
 
     def is_valid(self):
@@ -83,10 +83,12 @@ class RemovePostLike(LikePost):
             user=self.user, post=self._post_obj
         ).first()
         if not user_liked:
-            raise JsonSerializableValueError({
-                "error": "you haven't liked this post yet.",
-                "code": "notLiked",
-            })
+            raise JsonSerializableValueError(
+                {
+                    "error": "you haven't liked this post yet.",
+                    "code": "notLiked",
+                }
+            )
         self._post_like_obj = user_liked
 
     def remove_like(self):
@@ -119,11 +121,13 @@ class PostFileValidator:
             created_at=self.date, post__isnull=True
         )
         if len(today_files) >= self.capacity:
-            raise JsonSerializableValueError({
-                "error": "you have reached the maximum "
-                "number of files for today.",
-                "code": "capacity",
-            })
+            raise JsonSerializableValueError(
+                {
+                    "error": "you have reached the maximum "
+                    "number of files for today.",
+                    "code": "capacity",
+                }
+            )
 
 
 @dataclass
@@ -147,3 +151,35 @@ class PostFile:
             content_type=self.content_type,
             content=self.content,
         ).pk
+
+
+@dataclass
+class AddComment(PostValidator):
+    content: str
+
+    def is_valid(self):
+        return super().is_valid([])
+
+    def add_comment(self):
+        cm.Comment.objects.create(
+            user=self.user, post=self._post_obj, content=self.content
+        )
+
+
+@dataclass
+class DeleteComment(PostValidator):
+    comment_id: int
+    _comment: cm.Comment = field(init=False, default=None)
+
+    def is_valid(self):
+        return super().is_valid([self._validate_comment])
+
+    def _validate_comment(self):
+        self._comment = cm.Comment.objects.filter(pk=self.comment_id)
+        if not self._comment:
+            raise JsonSerializableValueError(
+                {"error": "comment not found.", "code": "notFound"}
+            )
+
+    def delete_comment(self):
+        self._comment.delete()

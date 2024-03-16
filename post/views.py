@@ -1,5 +1,6 @@
 from datetime import date
 
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -80,7 +81,7 @@ def like(request, post_id):
     """
 
     if request.method == "PUT":
-        like_post_proccess = core.LikePostCreate(request.user, post_id)
+        like_post_proccess = core.PostLike(request.user, post_id)
         if not like_post_proccess.is_valid():
             return Response(
                 like_post_proccess.errors, status.HTTP_400_BAD_REQUEST
@@ -91,7 +92,7 @@ def like(request, post_id):
             {"message": "post liked successfully."}, status.HTTP_201_CREATED
         )
     elif request.method == "DELETE":
-        delete_post_like_processor = core.RemovePostLike(request.user, post_id)
+        delete_post_like_processor = core.DeletePostLike(request.user, post_id)
         if not delete_post_like_processor.is_valid():
             return Response(
                 delete_post_like_processor.errors, status.HTTP_400_BAD_REQUEST
@@ -100,4 +101,47 @@ def like(request, post_id):
         delete_post_like_processor.remove_like()
         return Response(
             {"message": "like removed successfully."}, status.HTTP_200_OK
+        )
+
+
+@api_view(["GET"])
+def view_post(request, post_id):
+    post = get_object_or_404(m.Post, pk=post_id)
+    serializer = s.PostSerializer(post)
+    return Response(serializer.data, status.HTTP_200_OK)
+
+
+@api_view(["PUT", "DELETE"])
+@authenticate
+def add_comment(request, post_id):
+    if request.method == "PUT":
+        serializer = s.PostCommentSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+        validator = core.AddComment(
+            request.user, post_id, **serializer.validated_data
+        )
+        if not validator.is_valid():
+            return Response(validator.errors, status.HTTP_400_BAD_REQUEST)
+
+        validator.add_comment()
+        return Response(
+            {"message": "comment added successfully."}, status.HTTP_201_CREATED
+        )
+    else:
+        serializer = s.DeletePostCommentSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+        validator = core.DeleteComment(
+            request.user, post_id, **serializer.validated_data
+        )
+        if not validator.is_valid():
+            return Response(validator.errors, status.HTTP_400_BAD_REQUEST)
+
+        validator.delete_comment()
+        return Response(
+            {"message": "comment removed successfully."},
+            status.HTTP_200_OK,
         )
