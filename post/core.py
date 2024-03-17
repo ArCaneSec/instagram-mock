@@ -1,5 +1,5 @@
+import re
 import datetime
-from abc import ABC
 from dataclasses import dataclass, field
 from typing import Callable
 
@@ -158,12 +158,19 @@ class AddComment(PostValidator):
     content: str
 
     def is_valid(self):
-        return super().is_valid([])
+        return super().is_valid([self._extract_tags])
 
+    def _extract_tags(self):
+        pattern = r"(?:@)([a-z][a-z\d._]{2,250})(?:$| |\n)"
+        tags = re.findall(pattern, self.content)
+        self.tags = u.User.objects.filter(username__in=tags)
+
+    @validation_required
     def add_comment(self):
-        cm.Comment.objects.create(
+        comment = cm.Comment.objects.create(
             user=self.user, post=self._post_obj, content=self.content
         )
+        comment.tags.set(self.tags)
 
 
 @dataclass
@@ -181,5 +188,6 @@ class DeleteComment(PostValidator):
                 {"error": "comment not found.", "code": "notFound"}
             )
 
+    @validation_required
     def delete_comment(self):
         self._comment.delete()

@@ -161,10 +161,10 @@ class CreatePostSerializer(serializers.Serializer):
 
         # Updating junction table if tags exists.
         if tags:
-            post.tags.set([user.pk for user in tags])
+            post.tags.set(tags)
 
         if hashtags:
-            post.hashtags.set([hashtag for hashtag in hashtags])
+            post.hashtags.set(hashtags)
 
         # Changing PostFile's post values from null to 'post' id.
         post_files.update(post=post)
