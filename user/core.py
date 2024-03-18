@@ -333,7 +333,7 @@ class Timeline:
         Extracting user's liked post's hashtags, then fetching
         newly uploaded posts containing those hashtags.
         """
-        
+
         recent_liked_posts = pm.PostLikes.fetch_recent_liked_posts(
             self.request_user
         )
@@ -360,9 +360,11 @@ class Timeline:
                     duplicate_tags.update(tags)
                     tags = []
                     break
-            query = pm.Post.objects.filter(
-                hashtags__title__in=tags
-            ).exclude(viewers=self.request_user).distinct()[:max]
+            query = (
+                pm.Post.objects.filter(hashtags__title__in=tags)
+                .exclude(viewers=self.request_user, user__is_private=False)
+                .distinct()[:max]
+            )
 
             if posts:
                 posts.union(query)

@@ -28,7 +28,8 @@ class Story(m.Model):
 
     user = m.ForeignKey(u.User, on_delete=m.CASCADE)
     content_type = m.CharField(choices=ContentType.choices, max_length=3)
-    content = m.TextField()
+    content = m.FileField(upload_to="static/users/stories/")
+    caption = m.TextField(null=True, blank=True)
     privacy_type = m.CharField(choices=PrivacyType.choices, max_length=3)
     active_until = m.DateTimeField(default=_get_story_lifetime)
     views = m.ManyToManyField(

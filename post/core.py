@@ -1,5 +1,5 @@
-import re
 import datetime
+import re
 from dataclasses import dataclass, field
 from typing import Callable
 
@@ -163,7 +163,7 @@ class AddComment(PostValidator):
     def _extract_tags(self):
         pattern = r"(?:@)([a-z][a-z\d._]{2,250})(?:$| |\n)"
         tags = re.findall(pattern, self.content)
-        self.tags = u.User.objects.filter(username__in=tags)
+        self.tags = u.User.objects.filter(username__in=tags, is_active=True)
 
     @validation_required
     def add_comment(self):
