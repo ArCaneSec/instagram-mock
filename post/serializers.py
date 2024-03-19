@@ -14,70 +14,9 @@ NAME_EXT_PATTERN = r"^[^.\\/<>%#{}]{1,50}\.(?<=\.)(\w{3,4}$)"
 
 
 class UploadPostFileSerializer(serializers.Serializer):
-    content = serializers.FileField(max_length=54)
-    content_type = serializers.CharField()
-
-    # def to_internal_value(self, data):
-    #     """
-    #     Extracting extention from file name and putting it
-    #     into 'data' dict.
-    #     """
-
-    #     try:
-    #         content_name = data.get("content").name
-    #     except AttributeError:
-    #         return super().to_internal_value(data)
-
-    #     try:
-    #         data["extension"] = re.match(NAME_EXT_PATTERN, content_name)[
-    #             1
-    #         ]  # matching the second group
-    #     except TypeError:
-    #         raise serializers.ValidationError(
-    #             {"error": "invalid file name.", "code": "invalidName"}
-    #         )
-    #     data["content_type"] = data["extension"]
-    #     return super().to_internal_value(data)
-
-    def validate_content(self, content):
-        """
-        Validating extension and content size.
-
-        If content type is not valid, or content type does not match
-        with the extension in file name, validation will not pass.
-        """
-        # if not content:
-        #     raise serializers.ValidationError(
-        #         {"error": "content field is required.", "code": "invalidData"}
-        #     )
-
-        valid_extensions = {}
-        valid_extensions["video/mp4"] = "mp4"
-        valid_extensions["image/gif"] = "gif"
-        valid_extensions["image/jpeg"] = "jpeg"
-        valid_extensions["image/jpg"] = "jpg"
-        valid_extensions["image/png"] = "png"
-        # pattern = r"^.[^.\\/<>%#(){}]{1,20}\.(png|jpeg|gif|png|mp4)?$"
-        if not (ct_type := valid_extensions.get(content.content_type)):
-            raise serializers.ValidationError(
-                {
-                    "error": "Invalid file type, supported types are:"
-                    " mp4, gif, jpeg, jpg png.",
-                    "code": "invalidExtension",
-                }
-            )
-        if self.initial_data["extension"] != ct_type:
-            raise serializers.ValidationError(
-                {
-                    "error": "Name extension and content-type are not consistent.",
-                    "code": "inconsistentExtension",
-                }
-            )
-        if not 1 < content.size / 1024 < 20000:
-            raise serializers.ValidationError(
-                {"error": "invalid file size.", "code": "invalidSize"}
-            )
-        return content
+    content = serializers.FileField(
+        max_length=54, validators=[validate_content]
+    )
 
 
 class CreatePostSerializer(serializers.Serializer):
@@ -187,7 +126,7 @@ class PostFileSerializer(serializers.ModelSerializer):
 class UserMinimalSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "profile"]
+        fields = ["id", "username", "nickname", "profile"]
 
 
 class CommentSerializer(serializers.Serializer):

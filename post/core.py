@@ -132,7 +132,6 @@ class PostFileValidator:
 
 @dataclass
 class PostFile:
-    content_type: str
     content: FileField
     validator: PostFileValidator
 
@@ -148,7 +147,7 @@ class PostFile:
 
         return m.PostFile.objects.create(
             user=self.validator.user,
-            content_type=self.content_type,
+            content_type=self.content.extension,
             content=self.content,
         ).pk
 
