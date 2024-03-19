@@ -182,7 +182,9 @@ class DeleteComment(PostValidator):
         return super().is_valid([self._validate_comment])
 
     def _validate_comment(self):
-        self._comment = cm.Comment.objects.filter(pk=self.comment_id)
+        self._comment = cm.Comment.objects.filter(
+            pk=self.comment_id, user=self.user
+        )
         if not self._comment:
             raise JsonSerializableValueError(
                 {"error": "comment not found.", "code": "notFound"}

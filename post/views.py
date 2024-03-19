@@ -106,7 +106,9 @@ def like(request, post_id):
 
 @api_view(["GET"])
 def view_post(request, post_id):
-    post = get_object_or_404(m.Post, pk=post_id)
+    post = get_object_or_404(
+        m.Post, pk=post_id, is_active=True, user__is_private=False
+    )
     serializer = s.PostSerializer(post)
     return Response(serializer.data, status.HTTP_200_OK)
 

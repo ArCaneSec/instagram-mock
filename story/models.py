@@ -41,3 +41,19 @@ class Story(m.Model):
     likes = m.ManyToManyField(
         u.User, related_name="user_story_likes", blank=True
     )
+
+    def save(self, *args, **kwargs):
+        if self.privacy_type.lower() == "closefriend":
+            self.privacy_type = Story.PrivacyType.CLOSE_FRIEND
+        else:
+            self.privacy_type = Story.PrivacyType.NORMAL
+
+        match self.content_type:
+            case "png" | "jpeg" | "jpg" | "gif":
+                self.content_type = self.ContentType.IMAGE
+            case "mp4":
+                self.content_type = self.ContentType.VIDEO
+            case _:
+                raise ValueError("invalid extension type.")
+
+        super().save(*args, **kwargs)

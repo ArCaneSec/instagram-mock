@@ -5,6 +5,7 @@ from rest_framework import serializers
 
 from comment.models import Comment
 from user.models import User
+from utils.validators import validate_content
 
 from . import models as m
 
@@ -16,27 +17,27 @@ class UploadPostFileSerializer(serializers.Serializer):
     content = serializers.FileField(max_length=54)
     content_type = serializers.CharField()
 
-    def to_internal_value(self, data):
-        """
-        Extracting extention from file name and putting it
-        into 'data' dict.
-        """
+    # def to_internal_value(self, data):
+    #     """
+    #     Extracting extention from file name and putting it
+    #     into 'data' dict.
+    #     """
 
-        try:
-            content_name = data.get("content").name
-        except AttributeError:
-            return super().to_internal_value(data)
+    #     try:
+    #         content_name = data.get("content").name
+    #     except AttributeError:
+    #         return super().to_internal_value(data)
 
-        try:
-            data["extension"] = re.match(NAME_EXT_PATTERN, content_name)[
-                1
-            ]  # matching the second group
-        except TypeError:
-            raise serializers.ValidationError(
-                {"error": "invalid file name.", "code": "invalidName"}
-            )
-        data["content_type"] = data["extension"]
-        return super().to_internal_value(data)
+    #     try:
+    #         data["extension"] = re.match(NAME_EXT_PATTERN, content_name)[
+    #             1
+    #         ]  # matching the second group
+    #     except TypeError:
+    #         raise serializers.ValidationError(
+    #             {"error": "invalid file name.", "code": "invalidName"}
+    #         )
+    #     data["content_type"] = data["extension"]
+    #     return super().to_internal_value(data)
 
     def validate_content(self, content):
         """
@@ -45,6 +46,10 @@ class UploadPostFileSerializer(serializers.Serializer):
         If content type is not valid, or content type does not match
         with the extension in file name, validation will not pass.
         """
+        # if not content:
+        #     raise serializers.ValidationError(
+        #         {"error": "content field is required.", "code": "invalidData"}
+        #     )
 
         valid_extensions = {}
         valid_extensions["video/mp4"] = "mp4"
