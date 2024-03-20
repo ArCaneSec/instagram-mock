@@ -19,6 +19,11 @@ class UploadStorySerializer(serializers.Serializer):
     tags = serializers.ListField(read_only=True)
 
     def _extract_tags(self):
+        """
+        Extracting all user tags from caption, via regex pattern,
+        then fetching their user object from database.
+        """
+
         caption = self.data["caption"]
         pattern = r"(?:@)([a-z][a-z\d._]{2,250})(?:$| |\n)"
         extracted_tags = re.findall(pattern, caption)

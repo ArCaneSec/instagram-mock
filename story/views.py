@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -14,6 +14,12 @@ from . import serializers as s
 @api_view(["POST", "DELETE"])
 @authenticate
 def story(request, story_id=None):
+    """
+    Responsible for posting and deleting stories.
+
+    Request schema can be found in 'UploadStorySerializer'.
+    """
+
     if request.method == "POST":
         serializer = s.UploadStorySerializer(
             data=request.data, context={"request": request}
@@ -42,6 +48,18 @@ def story(request, story_id=None):
 @api_view(["GET"])
 @authenticate
 def get_story(request, story_id):
+    """
+    Retriving story based on id.
+    Users which they own the story will receive extera informations
+    such as viewers and likes.
+
+    If story privacy type is not applicable for viewing by random users,
+    they cannot see the story and receive 403.
+
+    At the end, the request user will get added to story viewers, if
+    they are not the creator themselves.
+    """
+
     now = datetime.now()
     story_obj = get_object_or_404(m.Story, pk=story_id, active_until__gt=now)
     if story_obj.user == request.user:
@@ -59,6 +77,6 @@ def get_story(request, story_id):
 
     if not story_obj.views.filter(pk=request.user.pk):
         story_obj.views.add(request.user)
-    
+
     serializer = s.StorySerializer(story_obj)
     return Response(serializer.data, status.HTTP_200_OK)
