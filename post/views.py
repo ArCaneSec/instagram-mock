@@ -105,7 +105,7 @@ def like(request, post_id):
 
 
 @api_view(["GET"])
-def view_post(request, post_id):
+def view_post_public(request, post_id):
     post = get_object_or_404(
         m.Post, pk=post_id, is_active=True, user__is_private=False
     )
@@ -147,3 +147,22 @@ def add_comment(request, post_id):
             {"message": "comment removed successfully."},
             status.HTTP_200_OK,
         )
+
+
+@api_view(["GET"])
+@authenticate
+def view_post(request, post_id):
+    post = get_object_or_404(m.Post, pk=post_id)
+    is_owner = post.user == request.user
+
+    if not post.is_active and not is_owner:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if post.user.is_private:
+        if not post.user.followers.filter(pk=request.user.pk):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+    if not is_owner:
+        post.viewers.add(request.user)
+
+    return Response(s.PostSerializer(post).data, status.HTTP_200_OK)
