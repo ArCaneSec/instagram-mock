@@ -105,7 +105,12 @@ def like(request, post_id):
 
 
 @api_view(["GET"])
-def view_post_public(request, post_id):
+def view_post_anonymously(request, post_id):
+    """
+    Users can see a public non archived post anonymously from
+    this endpoint.
+    """
+
     post = get_object_or_404(
         m.Post, pk=post_id, is_active=True, user__is_private=False
     )
@@ -116,6 +121,16 @@ def view_post_public(request, post_id):
 @api_view(["PUT", "DELETE"])
 @authenticate
 def add_comment(request, post_id):
+    """
+    Responsible for add/delete comment from a post.
+
+    Request schema can be found in 'PostCommentSerializer'.
+    Users can add multiple comment on the same post, and can delete
+    their own comment.
+
+    Post owners can delete WHATEVER comment they want from their post.
+    """
+
     if request.method == "PUT":
         serializer = s.PostCommentSerializer(data=request.data)
         if not serializer.is_valid():
@@ -152,6 +167,12 @@ def add_comment(request, post_id):
 @api_view(["GET"])
 @authenticate
 def view_post(request, post_id):
+    """
+    Authenticated post viewing, the purpose is to let post owners
+    see their archived posts as well, and also post viewers will
+    get updated so users won't see duplicate posts in their timeline.
+    """
+
     post = get_object_or_404(m.Post, pk=post_id)
     is_owner = post.user == request.user
 
