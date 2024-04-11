@@ -1,4 +1,6 @@
+import { urls } from "@/app/urls";
 import { Inter } from "next/font/google";
+import Image from "next/image";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -11,7 +13,14 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className="bg-black">
+        <nav
+          id="menu-tab"
+          className="border-r w-1/6 h-dvh bg-slate-950 flex-wrap flex-col text-white font-mono text-2xl shadow-2xl gap-2 py-2"
+        >
+          {children}
+        </nav>
+      </body>
     </html>
   );
 }
