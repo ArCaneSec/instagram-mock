@@ -1,9 +1,9 @@
 import datetime
 from dataclasses import dataclass, field
+from itertools import chain
 from typing import Callable
 
 from django.db.models import QuerySet
-
 from post import models as pm
 from post.core import JsonSerializableValueError
 from utils.auth_utils import make_password
@@ -291,8 +291,8 @@ class Timeline:
         if posts.count() >= 5:
             return posts
 
-        related_posts = self._fetch_related_posts(5 - posts.count())
-        return posts | related_posts if related_posts else posts
+        related_posts = self._fetch_related_posts(5 - posts.count(), posts)
+        return list(chain(posts, related_posts)) if related_posts else posts
 
     def _fetch_followings(self):
         """
@@ -320,15 +320,17 @@ class Timeline:
         posts = pm.Post.objects.filter(
             user__in=followings, created_at__range=[two_days_ago, now]
         ).exclude(viewers=self.request_user)[:5]
-        pm.PostViewsHistory.objects.bulk_create(
-            [
-                pm.PostViewsHistory(user=self.request_user, post=post)
-                for post in posts
-            ]
-        )
+        # pm.PostViewsHistory.objects.bulk_create(
+        #     [
+        #         pm.PostViewsHistory(user=self.request_user, post=post)
+        #         for post in posts
+        #     ]
+        # )
         return posts
 
-    def _fetch_related_posts(self, max: int) -> QuerySet[pm.Post]:
+    def _fetch_related_posts(
+        self, max: int, current_posts: QuerySet[pm.Post]
+    ) -> QuerySet[pm.Post]:
         """
         Extracting user's liked post's hashtags, then fetching
         newly uploaded posts containing those hashtags.
@@ -361,8 +363,16 @@ class Timeline:
                     tags = []
                     break
             query = (
-                pm.Post.objects.filter(hashtags__title__in=tags)
-                .exclude(viewers=self.request_user, user__is_private=False)
+                pm.Post.objects.filter(
+                    hashtags__title__in=tags,
+                    user__is_private=False,
+                )
+                .exclude(
+                    viewers=self.request_user,
+                )
+                .exclude(
+                    id__in=[post.id for post in current_posts],
+                )
                 .distinct()[:max]
             )
 
@@ -374,10 +384,10 @@ class Timeline:
             if not 5 > len(posts) > 0:
                 break
 
-        pm.PostViewsHistory.objects.bulk_create(
-            [
-                pm.PostViewsHistory(user=self.request_user, post=post)
-                for post in posts
-            ]
-        )
+        # pm.PostViewsHistory.objects.bulk_create(
+        #     [
+        #         pm.PostViewsHistory(user=self.request_user, post=post)
+        #         for post in posts
+        #     ]
+        # )
         return posts

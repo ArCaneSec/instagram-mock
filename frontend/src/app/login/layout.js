@@ -1,9 +1,11 @@
 "use client";
-import { useRouter } from 'next/navigation';
-import { urls, apis } from "@/app/urls"
+import { apis, urls } from "@/app/urls";
+import { useRouter } from "next/navigation";
+import Cookies from "universal-cookie";
 
 export default function LoginForm() {
-  const router = useRouter()
+  const cookies = new Cookies();
+  const router = useRouter();
   const login = async (form) => {
     form.preventDefault();
     const username = form.target.elements.username.value;
@@ -15,13 +17,16 @@ export default function LoginForm() {
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
+          "x-csrftoken": cookies.get("csrftoken"),
         },
         body: JSON.stringify({ username, password }),
       });
-      if (!res.ok) return
+      if (!res.ok) {
+        console.log(await res.json());
+        return;
+      }
 
-      router.push(urls.profile)
-
+      router.push(urls.profile);
     } catch (err) {
       console.error(err);
     }
