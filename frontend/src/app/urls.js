@@ -11,6 +11,7 @@ export const _BACK_URL = `${_BACL_SCHEME}://${_BACL_HOST}:${_BACK_PORT}`;
 export const urls = {
   login: `${_FRONT_URL}/login`,
   profile: `${_FRONT_URL}/profile`,
+  timeline: `${_FRONT_URL}/timeline`,
 };
 
 export const apis = {
