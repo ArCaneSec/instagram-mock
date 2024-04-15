@@ -1,6 +1,4 @@
-import { urls } from "@/app/urls";
 import { Inter } from "next/font/google";
-import Image from "next/image";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -13,9 +11,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="bg-black">
-          {children}
-      </body>
+      <body className="bg-black">{children}</body>
     </html>
   );
 }

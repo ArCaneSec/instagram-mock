@@ -17,4 +17,5 @@ urlpatterns = [
     ),
     path("settings/", views.settings, name="settings"),
     path("timeline/", views.timeline, name="timeline"),
+    path("<str:username>/", views.get_user_data, name="get_user_data"),
 ]

@@ -26,7 +26,7 @@ export default function LoginForm() {
         return;
       }
 
-      router.push(urls.profile);
+      router.push(urls.dashboard);
     } catch (err) {
       console.error(err);
     }

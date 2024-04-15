@@ -16,7 +16,7 @@ function NavBar() {
   return (
     <nav
       id="menu-tab"
-      className="border-r w-1/6 h-dvh bg-slate-950 flex-wrap flex-col text-white font-roboto text-xl sticky top-0 py-2"
+      className="border-r border-borderDefault w-1/6 h-dvh bg-slate-950 flex-wrap flex-col text-white font-roboto text-xl sticky top-0 py-2"
     >
       <NavBarLogo />
       <NavItem itemName={"Profile"} imageSrc={"profile.svg"} />
@@ -51,7 +51,7 @@ function NavBarLogo() {
   return (
     <div
       id="nav-bar-logo"
-      className="flex flex-col items-center border-b font-dancing-script text-3xl pb-2"
+      className="flex flex-col items-center border-b border-borderDefault font-dancing-script text-3xl pb-2"
     >
       <div>
         <Image
@@ -64,17 +64,5 @@ function NavBarLogo() {
       </div>
       Instagram Moc
     </div>
-  );
-}
-
-function NavBarButton() {
-  return <div className="">close</div>;
-}
-
-function Post(post) {
-  return (
-    <>
-      <li key={post.id}></li>
-    </>
   );
 }

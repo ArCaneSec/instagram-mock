@@ -1,16 +1,17 @@
 from django.http.response import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from post.serializers import PostSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-
-from post.serializers import PostSerializer
 from utils import auth_utils as au
 
 from . import authenticate as auth
 from . import core
 from . import serializers as s
 from .authenticate import authenticate
+from .models import User
 
 # Create your views here.
 
@@ -231,3 +232,11 @@ def timeline(request):
     posts = timeline_core.fetch_posts()
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@authenticate
+def get_user_data(request, username):
+    user = get_object_or_404(User, username=username)
+    serializer = s.OtherUserSerializer(user)
+    return Response(serializer.data)

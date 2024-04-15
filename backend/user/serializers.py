@@ -182,3 +182,19 @@ class UserSettingsSerializer(serializers.Serializer):
             )
 
         return super().validate(attrs)
+
+
+class OtherUserSerializer(UserDataSerializer):
+    class Meta:
+        model = m.User
+        fields = [
+            "userName",
+            "nickName",
+            "firstName",
+            "lastName",
+            "profile",
+            "biography",
+            "totalFollowers",
+            "totalFollowings",
+            "totalFollowRequests",
+        ]
