@@ -23,6 +23,7 @@ export default function LoginForm() {
       });
       if (!res.ok) {
         console.log(await res.json());
+        router.push(urls.login);
         return;
       }
 

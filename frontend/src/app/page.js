@@ -4,31 +4,25 @@ import Timeline from "./components";
 import { urls } from "./urls";
 
 export default function Home() {
-  return (
-    <main className="flex w-full h-full gap">
-      <NavBar />
-      <Timeline />
-    </main>
-  );
+  return <Timeline />;
 }
 
-function NavBar() {
+export function NavBar() {
   return (
     <nav
       id="menu-tab"
-      className="border-r border-borderDefault w-1/6 h-dvh bg-slate-950 flex-wrap flex-col text-white font-roboto text-xl sticky top-0 py-2"
+      className="border-r border-borderDefault w-1/6 h-dvh bg-slate-950 flex flex-wrap flex-col text-white font-roboto text-xl sticky top-0 py-2"
     >
       <NavBarLogo />
       <NavItem itemName={"Profile"} imageSrc={"profile.svg"} />
       <NavItem itemName={"Timeline"} imageSrc={"timeline.svg"} />
       <NavItem itemName={"Settings"} imageSrc={"setting.svg"} />
       <NavItem itemName={"Logout"} imageSrc={"logout.svg"} />
-      {/* <NavBarButton /> */}
     </nav>
   );
 }
 
-function NavItem({ itemName, imageSrc}) {
+function NavItem({ itemName, imageSrc }) {
   return (
     <div className="flex flex-row hover:bg-slate-800 w-full h-10 text-xl gap-1 mt-1 items-center">
       <span className="pl-12">

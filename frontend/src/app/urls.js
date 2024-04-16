@@ -1,12 +1,12 @@
 const _FRONT_SCHEME = "http";
 const _FRONT_HOST = "localhost";
 const _FRONT_PORT = "3000";
-const _FRONT_URL = `${_FRONT_SCHEME}://${_FRONT_HOST}:${_FRONT_PORT}`;
+export const _FRONT_URL = `${_FRONT_SCHEME}://${_FRONT_HOST}:${_FRONT_PORT}`;
 
-const _BACL_SCHEME = "http";
-const _BACL_HOST = "localhost";
+const _BACK_SCHEME = "http";
+const _BACK_HOST = "localhost";
 const _BACK_PORT = "8000";
-export const _BACK_URL = `${_BACL_SCHEME}://${_BACL_HOST}:${_BACK_PORT}`;
+export const _BACK_URL = `${_BACK_SCHEME}://${_BACK_HOST}:${_BACK_PORT}`;
 
 export const urls = {
   dashboard: `${_FRONT_URL}/`,
@@ -19,5 +19,5 @@ export const apis = {
   login: `${_BACK_URL}/users/login/`,
   profile: `${_BACK_URL}/users/dashboard/`,
   timeline: `${_BACK_URL}/users/timeline/`,
-  userData: `${_BACK_URL}/users/get_user_data/`,
+  userData: `${_BACK_URL}/users/`,
 };

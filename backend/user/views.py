@@ -235,7 +235,6 @@ def timeline(request):
 
 
 @api_view(["GET"])
-@authenticate
 def get_user_data(request, username):
     user = get_object_or_404(User, username=username)
     serializer = s.OtherUserSerializer(user)

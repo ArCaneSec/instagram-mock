@@ -196,5 +196,4 @@ class OtherUserSerializer(UserDataSerializer):
             "biography",
             "totalFollowers",
             "totalFollowings",
-            "totalFollowRequests",
         ]

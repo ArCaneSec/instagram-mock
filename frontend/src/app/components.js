@@ -1,25 +1,32 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import Cookies from "universal-cookie";
-import { _BACK_URL, apis } from "./urls";
+import { _BACK_URL, apis, urls } from "./urls";
 
 export default function Timeline() {
   const [timeLinePosts, setTimeLinePosts] = useState([]);
   const [ref, inView] = useInView(1);
   const cookies = new Cookies();
+  const router = useRouter();
 
   const fetchRequest = async () => {
-    return await fetch(apis.timeline, {
+    const res = await fetch(apis.timeline, {
       method: "GET",
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
         "x-csrftoken": cookies.get("csrftoken"),
       },
-    }).then(async (res) => await res.json());
+    });
+    if (!res.ok) {
+      router.push(urls.login);
+      return;
+    }
+    return await res.json();
   };
 
   const fetchTimeline = async () => {
@@ -44,14 +51,12 @@ export default function Timeline() {
   }, [inView]);
 
   return (
-    <>
       <div id="timeline" className="flex flex-col items-center">
         <TimelinePosts posts={timeLinePosts} />
         <div ref={ref} className="justify-center pt-2">
           <LoadingSpinner />
         </div>
       </div>
-    </>
   );
 }
 
@@ -75,7 +80,12 @@ function Post({ post }) {
           ></Image>
         </span>
         <div className="flex flex-col">
-          <Link className="font-semibold" href={`${_BACK_URL}/users/${post.user.username}/`}>{post.user.username} </Link>
+          <Link
+            className="font-semibold"
+            href={`${_BACK_URL}/users/${post.user.username}/`}
+          >
+            {post.user.username}{" "}
+          </Link>
           <span>{post.user.nickname}</span>
         </div>
       </div>
