@@ -70,6 +70,10 @@ class User(BasicUserInfo):
     def total_follow_requests(self):
         return self.follow_requests.count()
 
+    @property
+    def total_posts(self):
+        return self.post_set.count()
+
     def save(self, *args, **kwargs):
         if kwargs.pop("change_salt", None):
             self.salt = utils.generate_hash()

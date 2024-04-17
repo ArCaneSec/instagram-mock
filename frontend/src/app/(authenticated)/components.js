@@ -1,27 +1,19 @@
 "use client";
+import { _BACK_URL, apis, urls } from "@/app/urls";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import Cookies from "universal-cookie";
-import { _BACK_URL, apis, urls } from "./urls";
+import fetchRequest from "./utils";
 
 export default function Timeline() {
   const [timeLinePosts, setTimeLinePosts] = useState([]);
   const [ref, inView] = useInView(1);
-  const cookies = new Cookies();
   const router = useRouter();
 
-  const fetchRequest = async () => {
-    const res = await fetch(apis.timeline, {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        "x-csrftoken": cookies.get("csrftoken"),
-      },
-    });
+  const fetchRequests = async () => {
+    const res = await fetchRequest(apis.timeline, "GET");
     if (!res.ok) {
       router.push(urls.login);
       return;
@@ -31,7 +23,7 @@ export default function Timeline() {
 
   const fetchTimeline = async () => {
     try {
-      const responses = await Promise.all([fetchRequest(), fetchRequest()]);
+      const responses = await Promise.all([fetchRequests(), fetchRequests()]);
       const packResponses = () => {
         const final = [];
         responses.map((res) => final.push(...res));
@@ -51,12 +43,12 @@ export default function Timeline() {
   }, [inView]);
 
   return (
-      <div id="timeline" className="flex flex-col items-center">
-        <TimelinePosts posts={timeLinePosts} />
-        <div ref={ref} className="justify-center pt-2">
-          <LoadingSpinner />
-        </div>
+    <main id="timeline" className="flex flex-col items-center">
+      <TimelinePosts posts={timeLinePosts} />
+      <div ref={ref} className="justify-center pt-2">
+        <LoadingSpinner />
       </div>
+    </main>
   );
 }
 
@@ -72,10 +64,11 @@ function Post({ post }) {
             src={
               post.user.profile
                 ? post.user.profile
-                : `${_BACK_URL}/static/not_found.png/`
+                : apis.notFound
             }
             width={50}
             height={50}
+            alt={post.user.username}
             className="rounded-full"
           ></Image>
         </span>
@@ -94,7 +87,7 @@ function Post({ post }) {
           src={`${_BACK_URL}${file.content}`}
           width={400}
           height={400}
-          alt="test"
+          alt={file.content}
         />
       ))}
       <div>{post.caption}</div>

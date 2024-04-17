@@ -20,4 +20,5 @@ export const apis = {
   profile: `${_BACK_URL}/users/dashboard/`,
   timeline: `${_BACK_URL}/users/timeline/`,
   userData: `${_BACK_URL}/users/`,
+  notFound: `${_BACK_URL}/static/not_found.png/`
 };

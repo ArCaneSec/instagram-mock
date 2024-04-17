@@ -1,7 +1,6 @@
 from datetime import date
 
 from django.db import models as m
-
 from user import models as u
 
 # Create your models here.
@@ -128,4 +127,3 @@ class PostViewsHistory(m.Model):
     user = m.ForeignKey(u.User, on_delete=m.CASCADE)
     post = m.ForeignKey(Post, on_delete=m.CASCADE)
     date = m.DateTimeField(auto_now_add=True)
-

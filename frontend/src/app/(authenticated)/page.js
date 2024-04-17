@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import Timeline from "./components";
-import { urls } from "./urls";
+import { urls } from "@/app/urls";
+import Timeline from "@/app/(authenticated)/components";
 
 export default function Home() {
   return <Timeline />;

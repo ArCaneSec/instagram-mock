@@ -34,7 +34,7 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col justify-center items-center">
+    <div className="h-screen bg-gray-50 flex flex-col justify-center items-center w-screen">
       <div className="bg-white border border-gray-300 w-80 py-8 flex items-center flex-col mb-3">
         <h1 className="bg-no-repeat instagram-logo"></h1>
         <form className="mt-8 w-64 flex flex-col" onSubmit={login}>

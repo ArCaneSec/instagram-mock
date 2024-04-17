@@ -114,6 +114,9 @@ class UserDataSerializer(serializers.ModelSerializer):
     totalFollowRequests = serializers.IntegerField(
         source="total_follow_requests", read_only=True
     )
+    totalPosts = serializers.IntegerField(
+        source="total_posts", read_only=True
+    )
 
     class Meta:
         model = m.User
@@ -129,6 +132,7 @@ class UserDataSerializer(serializers.ModelSerializer):
             "totalFollowers",
             "totalFollowings",
             "totalFollowRequests",
+            "totalPosts",
         ]
 
     def validate_email(self, email):
@@ -196,4 +200,5 @@ class OtherUserSerializer(UserDataSerializer):
             "biography",
             "totalFollowers",
             "totalFollowings",
+            "totalPosts",
         ]
