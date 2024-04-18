@@ -122,6 +122,10 @@ class Post(m.Model):
     def total_likes(self):
         return self.likes.count()
 
+    @property
+    def total_comments(self):
+        return self.comments.count()
+
 
 class PostViewsHistory(m.Model):
     user = m.ForeignKey(u.User, on_delete=m.CASCADE)

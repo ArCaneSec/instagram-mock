@@ -1,7 +1,7 @@
 import re
+
 from django.db import models as m
 from rest_framework.serializers import ValidationError
-
 from utils import auth_utils as utils
 
 # Create your models here.
@@ -136,6 +136,12 @@ class User(BasicUserInfo):
             raise ValidationError(
                 {"error": "phone number is not valid.", "code": "invalidValue"}
             )
+
+    def can_view(self, other_user: "User") -> bool:
+        if other_user.is_private is False or self.pk == other_user.pk:
+            return True
+
+        return other_user.followers.filter(pk=self.pk).exists()
 
     @staticmethod
     def validate_email(email: str):

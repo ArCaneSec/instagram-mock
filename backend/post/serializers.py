@@ -2,8 +2,6 @@ import re
 
 from django.db.models import QuerySet
 from rest_framework import serializers
-
-from comment.models import Comment
 from user.models import User
 from utils.validators import validate_content
 
@@ -162,3 +160,16 @@ class PostCommentSerializer(serializers.Serializer):
 
 class DeletePostCommentSerializer(serializers.Serializer):
     comment_id = serializers.IntegerField()
+
+
+class MinimalPostSerializer(serializers.ModelSerializer):
+    files = PostFileSerializer(many=True, source="postfile_set")
+
+    class Meta:
+        model = m.Post
+        fields = [
+            "id",
+            "total_likes",
+            "total_comments",
+            "files",
+        ]

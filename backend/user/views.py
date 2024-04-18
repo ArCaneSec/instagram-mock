@@ -1,6 +1,8 @@
+from django.core.paginator import Paginator
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from post import models as pm
 from post.serializers import PostSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -238,5 +240,20 @@ def timeline(request):
 @api_view(["GET"])
 def get_user_data(request, username):
     user = get_object_or_404(User, username=username)
-    serializer = s.OtherUserSerializer(user)
-    return Response(serializer.data)
+
+    if not request.user.can_view(user):
+        serializer = s.UserPreviewSerializer(user)
+        return Response(serializer.data)
+
+    page = request.query_params.get("page")
+    if page is None or not page.isdigit():
+        page = 1
+    
+    posts = pm.Post.objects.filter(user=user)
+    paginator = Paginator(posts, 24)
+    objs = paginator.get_page(int(page))
+    user.posts = objs
+
+    serializer = s.UserPreviewSerializer(user).data
+
+    return Response(serializer)

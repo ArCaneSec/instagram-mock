@@ -1,3 +1,4 @@
+from post.serializers import MinimalPostSerializer
 from rest_framework import serializers
 
 from . import models as m
@@ -105,6 +106,7 @@ class UserDataSerializer(serializers.ModelSerializer):
     biography = serializers.CharField(max_length=1000, required=False)
     email = serializers.EmailField(required=False)
     phoneNumber = serializers.CharField(source="phone_number", required=False)
+    isPrivate = serializers.BooleanField(source="is_private")
     totalFollowers = serializers.IntegerField(
         source="total_followers", read_only=True
     )
@@ -114,9 +116,7 @@ class UserDataSerializer(serializers.ModelSerializer):
     totalFollowRequests = serializers.IntegerField(
         source="total_follow_requests", read_only=True
     )
-    totalPosts = serializers.IntegerField(
-        source="total_posts", read_only=True
-    )
+    totalPosts = serializers.IntegerField(source="total_posts", read_only=True)
 
     class Meta:
         model = m.User
@@ -129,6 +129,7 @@ class UserDataSerializer(serializers.ModelSerializer):
             "biography",
             "email",
             "phoneNumber",
+            "isPrivate",
             "totalFollowers",
             "totalFollowings",
             "totalFollowRequests",
@@ -188,7 +189,9 @@ class UserSettingsSerializer(serializers.Serializer):
         return super().validate(attrs)
 
 
-class OtherUserSerializer(UserDataSerializer):
+class UserPreviewSerializer(UserDataSerializer):
+    posts = MinimalPostSerializer(many=True, required=False)
+
     class Meta:
         model = m.User
         fields = [
@@ -198,7 +201,9 @@ class OtherUserSerializer(UserDataSerializer):
             "lastName",
             "profile",
             "biography",
+            "isPrivate",
             "totalFollowers",
             "totalFollowings",
             "totalPosts",
+            "posts",
         ]
