@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError
 
 from .exceptions import JsonSerializableValueError
 
-NAME_EXT_PATTERN = r"^[^.\\/<>%#{}]{1,50}\.(?<=\.)(\w{3,4}$)"
+NAME_EXT_PATTERN = r"^[^\\/<>%#{}]{1,50}\.(?<=\.)(\w{3,4}$)"
 
 
 @dataclass
@@ -55,7 +55,14 @@ def validate_content(content):
     with the extension in file name, validation will not pass.
     """
 
-    extension = re.match(NAME_EXT_PATTERN, content.name)[1]
+    extension = re.match(NAME_EXT_PATTERN, content.name).group(1)
+    if extension is None:
+        raise ValidationError(
+            {
+                "error": "Invalid file name",
+                "code": "invalidName",
+            }
+        )
 
     valid_extensions = {}
     valid_extensions["video/mp4"] = "mp4"

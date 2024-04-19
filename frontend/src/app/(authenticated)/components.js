@@ -91,12 +91,23 @@ function Post({ post }) {
         </div>
       </div>
       <div className="relative flex flex-col justify-center">
-        <Image
-          src={`${_BACK_URL}${post.files[currentFile].content}`}
-          width={400}
-          height={400}
-          alt={post.files[currentFile].content}
-        />
+        {post.files[currentFile].contentType == "IMG" ? (
+          <Image
+            src={`${_BACK_URL}${post.files[currentFile].content}`}
+            width={400}
+            height={400}
+            alt={post.files[currentFile].content}
+          />
+        ) : (
+          <video
+            src={`${_BACK_URL}${post.files[currentFile].content}`}
+            width={400}
+            height={400}
+            controls
+          >
+            <source src={`${_BACK_URL}${post.files[currentFile].content}`} type="video/mp4" />
+          </video>
+        )}
         <Image
           src={"left-arrow.svg"}
           width={30}

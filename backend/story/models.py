@@ -1,7 +1,7 @@
 import datetime
 
+from utils.model_utils import generate_path
 from django.db import models as m
-
 from user import models as u
 
 # Create your models here.
@@ -28,7 +28,9 @@ class Story(m.Model):
 
     user = m.ForeignKey(u.User, on_delete=m.CASCADE)
     content_type = m.CharField(choices=ContentType.choices, max_length=3)
-    content = m.FileField(upload_to="static/users/stories/")
+    content = m.FileField(
+        upload_to=generate_path
+    )
     caption = m.TextField(null=True, blank=True)
     privacy_type = m.CharField(choices=PrivacyType.choices, max_length=3)
     active_until = m.DateTimeField(default=_get_story_lifetime)

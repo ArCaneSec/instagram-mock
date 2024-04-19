@@ -1,5 +1,6 @@
 import re
 
+from utils.model_utils import generate_path
 from django.db import models as m
 from rest_framework.serializers import ValidationError
 from utils import auth_utils as utils
@@ -13,7 +14,9 @@ class BasicUserInfo(m.Model):
     first_name = m.CharField(max_length=250)
     last_name = m.CharField(max_length=250)
     profile = m.ImageField(
-        upload_to="static/users/profiles/", null=True, blank=True
+        upload_to=generate_path,
+        null=True,
+        blank=True,
     )
     biography = m.TextField(null=True, blank=True)
     email = m.EmailField(null=True, blank=True, unique=True)

@@ -1,5 +1,6 @@
 from datetime import date
 
+from utils.model_utils import generate_path
 from django.db import models as m
 from user import models as u
 
@@ -45,7 +46,7 @@ class PostFile(m.Model):
     user = m.ForeignKey(u.User, on_delete=m.CASCADE)
     post = m.ForeignKey("Post", on_delete=m.CASCADE, null=True)
     content_type = m.CharField(choices=ContentType.choices, max_length=3)
-    content = m.FileField(upload_to="static/users/posts/")
+    content = m.FileField(upload_to=generate_path)
     created_at = m.DateField(auto_now_add=True)
 
     class Meta:
