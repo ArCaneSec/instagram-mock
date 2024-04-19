@@ -1,4 +1,4 @@
-from django.core.paginator import Paginator
+from django.core.paginator import EmptyPage, Paginator
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -248,12 +248,21 @@ def get_user_data(request, username):
     page = request.query_params.get("page")
     if page is None or not page.isdigit():
         page = 1
-    
+
     posts = pm.Post.objects.filter(user=user)
-    paginator = Paginator(posts, 24)
-    objs = paginator.get_page(int(page))
+    paginator = Paginator(posts, 2)
+    try:
+        objs = paginator.page(int(page))
+    except EmptyPage:
+        return Response({"error": "emptyPage"}, status.HTTP_404_NOT_FOUND)
+
     user.posts = objs
 
     serializer = s.UserPreviewSerializer(user).data
 
+    # if int(page) == 3:
+    #     import time
+    #     time.sleep(5)
+    #     return Response({}, status=302)
+        
     return Response(serializer)

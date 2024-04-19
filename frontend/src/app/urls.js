@@ -12,7 +12,6 @@ export const urls = {
   dashboard: `${_FRONT_URL}/`,
   login: `${_FRONT_URL}/login`,
   profile: `${_FRONT_URL}/profile`,
-  timeline: `${_FRONT_URL}/timeline`,
 };
 
 export const apis = {
