@@ -53,6 +53,18 @@ export default function Timeline() {
 }
 
 function Post({ post }) {
+  const [currentFile, setCurrentFile] = useState(0);
+  const setFile = (currentFile, totalFiles) => {
+    if (currentFile >= totalFiles) {
+      setCurrentFile(totalFiles - 1);
+      return;
+    } else if (currentFile <= 0) {
+      setCurrentFile(0);
+      return;
+    }
+    setCurrentFile(currentFile);
+  };
+
   return (
     <li
       key={post.id}
@@ -61,11 +73,7 @@ function Post({ post }) {
       <div className="flex flex-row gap-2 items-center mb-2">
         <span>
           <Image
-            src={
-              post.user.profile
-                ? post.user.profile
-                : apis.notFound
-            }
+            src={post.user.profile ? post.user.profile : apis.notFound}
             width={50}
             height={50}
             alt={post.user.username}
@@ -82,14 +90,34 @@ function Post({ post }) {
           <span>{post.user.nickname}</span>
         </div>
       </div>
-      {post.files.map((file) => (
+      <div className="relative flex flex-col justify-center">
         <Image
-          src={`${_BACK_URL}${file.content}`}
+          src={`${_BACK_URL}${post.files[currentFile].content}`}
           width={400}
           height={400}
-          alt={file.content}
+          alt={post.files[currentFile].content}
         />
-      ))}
+        <Image
+          src={"left-arrow.svg"}
+          width={30}
+          height={30}
+          className={
+            currentFile ? "absolute left-3 dark:invert opacity-25" : "hidden"
+          }
+          onClick={() => setFile(currentFile - 1, post.files.length)}
+        ></Image>
+        <Image
+          src={"right-arrow.svg"}
+          width={30}
+          height={30}
+          className={
+            currentFile + 1 < post.files.length
+              ? "absolute right-3 dark:invert opacity-25"
+              : "hidden"
+          }
+          onClick={() => setFile(currentFile + 1, post.files.length)}
+        ></Image>
+      </div>
       <div>{post.caption}</div>
     </li>
   );
@@ -103,7 +131,7 @@ function TimelinePosts({ posts }) {
   return <ul className="flex flex-col gap-y-2">{timelinePosts}</ul>;
 }
 
-function LoadingSpinner() {
+export function LoadingSpinner() {
   return (
     <div role="status">
       <svg

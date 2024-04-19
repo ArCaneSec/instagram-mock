@@ -11,7 +11,7 @@ export function NavBar() {
   return (
     <nav
       id="menu-tab"
-      className="border-r border-borderDefault w-1/6 h-dvh bg-slate-950 flex flex-wrap flex-col text-white font-roboto text-xl sticky top-0 py-2"
+      className="border-r border-borderDefault h-full w-80 bg-slate-950 flex flex-wrap flex-col text-white font-roboto text-xl fixed top-0 py-2"
     >
       <NavBarLogo />
       <NavItem itemName={"Profile"} imageSrc={"profile.svg"} />
@@ -34,8 +34,8 @@ function NavItem({ itemName, imageSrc }) {
           className="dark:invert"
         />
       </span>
-      <Link href={urls.profile} className="px-3">
-        {itemName}{" "}
+      <Link href={urls.dashboard} className="px-3">
+        {itemName}
       </Link>
     </div>
   );
