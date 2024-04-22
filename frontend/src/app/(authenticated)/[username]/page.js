@@ -128,13 +128,21 @@ function UserTextData({ userData }) {
 
 function UserPosts({ posts }) {
   const postsData = posts?.map((post) => {
-    return (
+    return post.files[0].contentType !== "VID" ? (
       <Image
         src={`${_BACK_URL}${post?.files[0]?.content}`}
         width={200}
         height={200}
         style={{ position: "relative", width: "250px", height: "250px" }}
       />
+    ) : (
+      <video
+        src={`${_BACK_URL}${post.files[0].content}`}
+        className="hover:border-x-white hover:border"
+        style={{ position: "relative", width: "250px", height: "250px" }}
+      >
+        <source src={`${_BACK_URL}${post.files[0].content}`} type="video/mp4" />
+      </video>
     );
   });
   return (

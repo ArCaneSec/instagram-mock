@@ -91,7 +91,7 @@ function Post({ post }) {
         </div>
       </div>
       <div className="relative flex flex-col justify-center">
-        {post.files[currentFile].contentType == "IMG" ? (
+        {post.files[currentFile].contentType != "VID" ? (
           <Image
             src={`${_BACK_URL}${post.files[currentFile].content}`}
             width={400}
@@ -105,7 +105,10 @@ function Post({ post }) {
             height={400}
             controls
           >
-            <source src={`${_BACK_URL}${post.files[currentFile].content}`} type="video/mp4" />
+            <source
+              src={`${_BACK_URL}${post.files[currentFile].content}`}
+              type="video/mp4"
+            />
           </video>
         )}
         <Image
