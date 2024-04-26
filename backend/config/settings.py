@@ -147,4 +147,6 @@ STATICFILES_DIRS = [BASE_DIR / "static/"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+CELERY_BROKER_URL = getenv("CELERY_REDIS_URL")
+
 # APPEND_SLASH = False
