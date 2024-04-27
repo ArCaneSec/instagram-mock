@@ -17,5 +17,7 @@ urlpatterns = [
     ),
     path("settings/", views.settings, name="settings"),
     path("timeline/", views.timeline, name="timeline"),
+    path("forgot-password/", views.forgot_password, name="forgot_password"),
+    path("reset-password/", views.reset_password, name="reset_password"),
     path("<str:username>/", views.get_user_data, name="get_user_data"),
 ]

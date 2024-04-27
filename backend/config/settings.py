@@ -10,12 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+from os import getenv
 from pathlib import Path
 
 from corsheaders.defaults import default_headers
-
 from dotenv import load_dotenv
-from os import getenv
+
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -144,6 +144,11 @@ STATICFILES_DIRS = [BASE_DIR / "static/"]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
+
+REDIS_BACKEND_HOST = getenv("REDIS_BACKEND_HOST")
+REDIS_BACKEND_PORT = getenv("REDIS_BACKEND_PORT")
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

@@ -1,3 +1,7 @@
+import datetime
+
+import redis
+from django.conf import settings
 from django.core.paginator import EmptyPage, Paginator
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -11,11 +15,15 @@ from utils import auth_utils as au
 
 from . import authenticate as auth
 from . import core
+from . import models as m
 from . import serializers as s
 from .authenticate import authenticate
 from .models import User
+from .tasks import send_forget_password_email
 
 # Create your views here.
+
+r = redis.Redis(settings.REDIS_BACKEND_HOST, settings.REDIS_BACKEND_PORT)
 
 
 @api_view(["POST"])
@@ -236,8 +244,8 @@ def timeline(request):
     return Response(serializer.data, status.HTTP_200_OK)
 
 
-@authenticate
 @api_view(["GET"])
+@authenticate
 def get_user_data(request, username):
     user = get_object_or_404(User, username=username)
 
@@ -264,5 +272,62 @@ def get_user_data(request, username):
     #     import time
     #     time.sleep(5)
     #     return Response({}, status=302)
-        
+
     return Response(serializer)
+
+
+@api_view(["POST"])
+def forgot_password(request):
+    serializer = s.ForgotPasswordSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(
+            {"error": "invalid request"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    user = serializer.validated_data.get("username")
+
+    if not user.email:
+        return Response(
+            {
+                "message": "This user does not have an active email address "
+                "for password recovery."
+            },
+            status.HTTP_412_PRECONDITION_FAILED,
+        )
+
+    send_forget_password_email.delay_on_commit(user.pk)
+    return Response(
+        {
+            "message": "A mail containing forgot password link "
+            "will send to your email address."
+        },
+        status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST"])
+def reset_password(request):
+    serializer = s.ResetPasswordSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+    code = serializer.validated_data.get("code")
+    obj = r.hgetall(code)
+
+    if obj is None or obj[
+        b"expire_at"
+    ].decode() <= datetime.datetime.now().strftime("%Y/%m/%d, %H:%M:%S"):
+        r.delete(code)
+        return Response(
+            {"error": "Forgot password link has been expired."},
+            status.HTTP_403_FORBIDDEN,
+        )
+
+    user = m.User.objects.filter(
+        username=obj[b"username"].decode(), is_deleted=False
+    ).first()
+    user.password = serializer.validated_data["password"]
+    user.save(change_salt=True)
+    r.delete(code)
+
+    return Response({"message": "Your password changed successfully."})
