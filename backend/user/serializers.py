@@ -207,3 +207,27 @@ class UserPreviewSerializer(UserDataSerializer):
             "totalPosts",
             "posts",
         ]
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    username = serializers.CharField()
+
+    def validate_username(self, username):
+        user = m.User.objects.filter(
+            username=username, is_deleted=False
+        ).first()
+        if not user:
+            raise serializers.ValidationError(
+                {"error": "Invalid username", "code": "invalidUserName"}
+            )
+
+        return user
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    password = serializers.CharField()
+    repeatPassword = serializers.CharField(
+        validators=[m.User.validate_password],
+        source="new_password",
+    )
